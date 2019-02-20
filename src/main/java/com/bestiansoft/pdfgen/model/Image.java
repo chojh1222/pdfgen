@@ -1,18 +1,22 @@
 package com.bestiansoft.pdfgen.model;
 
+import java.util.List;
+
 public class Image {
     int signId;
     String userId;
     String signtype;
     String filename;
     String encImg;
+    List<String> arr;
 
-    public Image(int signId, String userId, String signtype, String filename, String encImg) {
+    public Image(int signId, String userId, String signtype, String filename, String encImg, List<String> arr) {
         this.signId = signId;
         this.userId = userId;
         this.signtype = signtype;
         this.filename = filename;
         this.encImg = encImg;
+        this.arr = arr;
     }
 
     /**
@@ -83,6 +87,20 @@ public class Image {
      */
     public void setEncImg(String encImg) {
         this.encImg = encImg;
+    }
+
+    /**
+     * @return the arr
+     */
+    public List<String> getArr() {
+        return arr;
+    }
+
+    /**
+     * @param arr the arr to set
+     */
+    public void setArr(List<String> arr) {
+        this.arr = arr;
     }
 
     

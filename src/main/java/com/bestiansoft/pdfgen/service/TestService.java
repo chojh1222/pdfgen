@@ -72,7 +72,7 @@ public class TestService {
             while(rs.next()) {
                 int imageId = rs.getInt(1);
                 String enc = Base64Utils.encodeToString(rs.getBytes(2));
-                ret.add(new Image(imageId, "", "", "", enc));
+                // ret.add(new Image(imageId, "", "", "", enc));
             }
             return ret;
         } 

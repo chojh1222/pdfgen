@@ -10,6 +10,7 @@ import com.bestiansoft.pdfgen.service.TestService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,9 +23,14 @@ public class SignController {
     @Autowired
     TestService testService;
 
-    @RequestMapping(value = "/test", method = { RequestMethod.GET })
-    public String req() throws SQLException {
-        return testService.getTest();
+    @RequestMapping(value = "/test", method = { RequestMethod.POST })
+    public String req(@RequestBody Image image) throws SQLException {
+        System.out.println("=====================================");
+        System.out.println("=====================================");
+        System.out.println("=====================================");
+        System.out.println(image.getArr().get(0));
+        // System.out.println(signId);
+        return "999";
     }
 
     @RequestMapping(value = "/upload", method = { RequestMethod.POST })
