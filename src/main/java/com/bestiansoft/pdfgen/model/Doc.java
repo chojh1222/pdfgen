@@ -3,6 +3,7 @@ package com.bestiansoft.pdfgen.model;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -21,7 +22,9 @@ public class Doc {
     private String docId;
     
     private String userId;
+    
     private String docName;
+    
     private String fileName;
 
     @Column(name="FILE_PATH")
@@ -33,6 +36,10 @@ public class Doc {
     @JsonManagedReference
     @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER)
     private List<Signer> signers;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "doc", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Element> elements;
 
     /**
      * @return the docId
@@ -130,6 +137,20 @@ public class Doc {
      */
     public void setSigners(List<Signer> signers) {
         this.signers = signers;
+    }
+
+    /**
+     * @return the elements
+     */
+    public List<Element> getElements() {
+        return elements;
+    }
+
+    /**
+     * @param elements the elements to set
+     */
+    public void setElements(List<Element> elements) {
+        this.elements = elements;
     }
 
     

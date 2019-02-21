@@ -2,28 +2,54 @@ package com.bestiansoft.pdfgen.model;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name="ECS_ELE_MGT")
 public class Element {
-    @Id
+    @Id @GeneratedValue
     private String eleId;
 
-    private String docId;
-    private String signId;
-    private String eleType;
-    private String elePosX;
-    private String elePosY;
-    private String eleHigth;
-    private String eleWidth;
-    private String eleFontName;
-    private String eleFontSize;
-    private String eleOrd;
+    @JsonBackReference
+    @ManyToOne
+    private Doc doc;
+
+    @Column(name="SIGN_ID")
+    private String signerNo;
+
+    @Column(name="ELE_TYPE")
+    private String inputType;
+
+    private Integer page;
+
+    @Column(name="ELE_POS_X")
+    private Float x;
+
+    @Column(name="ELE_POS_Y")
+    private Float y;
+
+    @Column(name="ELE_HEIGHT")
+    private Float h;
+
+    @Column(name="ELE_WIDTH")
+    private Float w;
+
+    @Column(name="ELE_FONT_NAME")
+    private String font;
+
+    @Column(name="ELE_FONT_SIZE")
+    private Integer charSize;
+
+    private Integer eleOrd;
 
     // 주석
     @Temporal(TemporalType.TIMESTAMP)
@@ -43,143 +69,116 @@ public class Element {
         this.eleId = eleId;
     }
 
+
     /**
-     * @return the docId
+     * @return the signerNo
      */
-    public String getDocId() {
-        return docId;
+    public String getSignerNo() {
+        return signerNo;
     }
 
     /**
-     * @param docId the docId to set
+     * @param signerNo the signerNo to set
      */
-    public void setDocId(String docId) {
-        this.docId = docId;
+    public void setSignerNo(String signerNo) {
+        this.signerNo = signerNo;
     }
 
     /**
-     * @return the signId
+     * @return the inputType
      */
-    public String getSignId() {
-        return signId;
+    public String getInputType() {
+        return inputType;
     }
 
     /**
-     * @param signId the signId to set
+     * @param inputType the inputType to set
      */
-    public void setSignId(String signId) {
-        this.signId = signId;
+    public void setInputType(String inputType) {
+        this.inputType = inputType;
     }
 
     /**
-     * @return the eleType
+     * @return the page
      */
-    public String getEleType() {
-        return eleType;
+    public Integer getPage() {
+        return page;
     }
 
     /**
-     * @param eleType the eleType to set
+     * @param page the page to set
      */
-    public void setEleType(String eleType) {
-        this.eleType = eleType;
+    public void setPage(Integer page) {
+        this.page = page;
     }
 
     /**
-     * @return the elePosX
+     * @return the x
      */
-    public String getElePosX() {
-        return elePosX;
+    public Float getX() {
+        return x;
     }
 
     /**
-     * @param elePosX the elePosX to set
+     * @param x the x to set
      */
-    public void setElePosX(String elePosX) {
-        this.elePosX = elePosX;
+    public void setX(Float x) {
+        this.x = x;
     }
 
     /**
-     * @return the elePosY
+     * @return the y
      */
-    public String getElePosY() {
-        return elePosY;
+    public Float getY() {
+        return y;
     }
 
     /**
-     * @param elePosY the elePosY to set
+     * @param y the y to set
      */
-    public void setElePosY(String elePosY) {
-        this.elePosY = elePosY;
+    public void setY(Float y) {
+        this.y = y;
     }
 
     /**
-     * @return the eleHigth
+     * @return the h
      */
-    public String getEleHigth() {
-        return eleHigth;
+    public Float getH() {
+        return h;
     }
 
     /**
-     * @param eleHigth the eleHigth to set
+     * @param h the h to set
      */
-    public void setEleHigth(String eleHigth) {
-        this.eleHigth = eleHigth;
+    public void setH(Float h) {
+        this.h = h;
     }
 
     /**
-     * @return the eleWidth
+     * @return the w
      */
-    public String getEleWidth() {
-        return eleWidth;
+    public Float getW() {
+        return w;
     }
 
     /**
-     * @param eleWidth the eleWidth to set
+     * @param w the w to set
      */
-    public void setEleWidth(String eleWidth) {
-        this.eleWidth = eleWidth;
-    }
-
-    /**
-     * @return the eleFontName
-     */
-    public String getEleFontName() {
-        return eleFontName;
-    }
-
-    /**
-     * @param eleFontName the eleFontName to set
-     */
-    public void setEleFontName(String eleFontName) {
-        this.eleFontName = eleFontName;
-    }
-
-    /**
-     * @return the eleFontSize
-     */
-    public String getEleFontSize() {
-        return eleFontSize;
-    }
-
-    /**
-     * @param eleFontSize the eleFontSize to set
-     */
-    public void setEleFontSize(String eleFontSize) {
-        this.eleFontSize = eleFontSize;
+    public void setW(Float w) {
+        this.w = w;
     }
 
     /**
      * @return the eleOrd
      */
-    public String getEleOrd() {
+    public Integer getEleOrd() {
         return eleOrd;
     }
 
     /**
      * @param eleOrd the eleOrd to set
      */
-    public void setEleOrd(String eleOrd) {
+    public void setEleOrd(Integer eleOrd) {
         this.eleOrd = eleOrd;
     }
 
@@ -196,4 +195,41 @@ public class Element {
     public void setRegDt(Date regDt) {
         this.regDt = regDt;
     }
+
+    /**
+     * @return the doc
+     */
+    public Doc getDoc() {
+        return doc;
+    }
+
+    /**
+     * @param doc the doc to set
+     */
+    public void setDoc(Doc doc) {
+        this.doc = doc;
+    }
+
+    /**
+     * @param font the font to set
+     */
+    public void setFont(String font) {
+        this.font = font;
+    }
+
+    /**
+     * @return the charSize
+     */
+    public Integer getCharSize() {
+        return charSize;
+    }
+
+    /**
+     * @param charSize the charSize to set
+     */
+    public void setCharSize(Integer charSize) {
+        this.charSize = charSize;
+    }
+
+    
 }
