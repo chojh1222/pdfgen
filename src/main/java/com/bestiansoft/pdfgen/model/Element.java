@@ -24,6 +24,8 @@ public class Element {
     private String eleFontName;
     private String eleFontSize;
     private String eleOrd;
+
+    // 주석
     @Temporal(TemporalType.TIMESTAMP)
     private Date regDt = new Date();
 
