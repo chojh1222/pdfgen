@@ -1,5 +1,6 @@
 package com.bestiansoft.pdfgen.model;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -27,19 +28,21 @@ public class Doc {
     
     private String fileName;
 
-    @Column(name="FILE_PATH")
-    private String doc;
+    private String filePath;
     
     @Temporal(TemporalType.TIMESTAMP)
     private Date regDt = new Date();
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER)
-    private List<Signer> signers;
-
-    @JsonManagedReference
-    @OneToMany(mappedBy = "doc", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<Element> elements;
+
+    public void addElement(Element element) {
+        if(this.elements == null)
+            this.elements = new ArrayList<>();
+        this.getElements().add(element);
+        element.setDoc(this);
+    }
 
     /**
      * @return the docId
@@ -97,19 +100,6 @@ public class Doc {
         this.fileName = fileName;
     }
 
-    /**
-     * @return the doc
-     */
-    public String getDoc() {
-        return doc;
-    }
-
-    /**
-     * @param doc the doc to set
-     */
-    public void setDoc(String doc) {
-        this.doc = doc;
-    }
 
     /**
      * @return the regDt
@@ -126,20 +116,6 @@ public class Doc {
     }
 
     /**
-     * @return the signers
-     */
-    public List<Signer> getSigners() {
-        return signers;
-    }
-
-    /**
-     * @param signers the signers to set
-     */
-    public void setSigners(List<Signer> signers) {
-        this.signers = signers;
-    }
-
-    /**
      * @return the elements
      */
     public List<Element> getElements() {
@@ -150,7 +126,24 @@ public class Doc {
      * @param elements the elements to set
      */
     public void setElements(List<Element> elements) {
-        this.elements = elements;
+        this.elements = new ArrayList<>();
+        for(Element elem : elements) {
+            this.addElement(elem);
+        }
+    }
+
+    /**
+     * @return the filePath
+     */
+    public String getFilePath() {
+        return filePath;
+    }
+
+    /**
+     * @param filePath the filePath to set
+     */
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
     

@@ -10,12 +10,19 @@ import java.util.Base64;
 import java.util.List;
 
 import com.bestiansoft.pdfgen.model.Image;
+import com.bestiansoft.pdfgen.model.Test;
+import com.bestiansoft.pdfgen.repo.TestRepository;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Base64Utils;
 
 @Service
 public class TestService {
+
+    @Autowired
+    TestRepository repository;
+
     public String getTest() throws SQLException {
         try(
             Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/test", "root", "1234");
@@ -48,7 +55,23 @@ public class TestService {
             String encodedImg = img.split(partSeparator)[1];
             decodedByte = Base64.getDecoder().decode(encodedImg);
         }
-        return uploadImage(decodedByte);
+
+        System.out.println(img);
+        System.out.println("=============================================");
+        System.out.println("=============================================");
+        System.out.println("=============================================");
+        System.out.println("=============================================");
+        System.out.println("=============================================");
+
+        Test test = new Test();
+        test.setImg(decodedByte);
+        repository.save(test);
+
+        System.out.println( Base64Utils.encodeToString(decodedByte) );
+
+        return 1;
+
+        // return uploadImage(decodedByte);
     }
 
     public int deleteImage(String imgId) throws SQLException {

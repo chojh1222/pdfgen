@@ -1,13 +1,43 @@
 package com.bestiansoft.pdfgen.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-@Entity
+// @Entity
 public class Signer {
+
+    public static List<Signer> signers = new ArrayList<>();
+    static {
+        Signer signer1 = new Signer();
+        signer1.setEmail("kys@gmail.com");
+        signer1.setSignerNm("kys");
+        signer1.setSignerNo("signer1");
+        signer1.setSignerType("owner");
+
+        Signer signer2 = new Signer();
+        signer2.setEmail("usang@gmail.com");
+        signer2.setSignerNm("usang");
+        signer2.setSignerNo("signer2");
+        signer2.setSignerType("signer");
+
+        signers.add(signer1);
+        signers.add(signer2);
+    }
+
+    public static Signer getSigner(String signerNo) {
+        for(Signer s : signers) {
+            if(s.getSignerNo().equals(signerNo))
+                return s;
+        }
+        return null;
+    }
+
     @Id
     private String signerNo;
     private String signerNm;

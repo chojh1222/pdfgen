@@ -1,22 +1,29 @@
 package com.bestiansoft.pdfgen.model;
 
 import java.util.Date;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import org.hibernate.annotations.GenericGenerator;
+
 @Entity
 @Table(name="ECS_ELE_MGT")
 public class Element {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(generator="system-uuid")
+    @GenericGenerator(name="system-uuid", strategy = "uuid")
     private String eleId;
 
     @JsonBackReference
@@ -37,7 +44,7 @@ public class Element {
     @Column(name="ELE_POS_Y")
     private Float y;
 
-    @Column(name="ELE_HEIGHT")
+    @Column(name="ELE_HIGHT")
     private Float h;
 
     @Column(name="ELE_WIDTH")
@@ -50,6 +57,9 @@ public class Element {
     private Integer charSize;
 
     private Integer eleOrd;
+
+    @OneToMany(mappedBy = "elem", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<SignerInput> signerInput; 
 
     // 주석
     @Temporal(TemporalType.TIMESTAMP)
@@ -231,5 +241,12 @@ public class Element {
         this.charSize = charSize;
     }
 
-    
+    /**
+     * @return the font
+     */
+    public String getFont() {
+        return font;
+    }
+
+
 }
