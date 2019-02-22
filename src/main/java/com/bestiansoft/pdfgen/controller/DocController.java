@@ -116,17 +116,24 @@ public class DocController {
 
         elementRepository.save(elem);
     }
-
-    
-    // 5. 생성자 pdf 확인 화면    
-    // ex) @RequestMapping(value = "/v1/document/{docId}/signerAll/", method = { RequestMethod.GET })
+        
+    /**
+     * 5. 생성자가 최종 pdf 확인 화면
+     *  - 문서아이디로 문서를 조회
+     *  - 생성/참여자 엘리먼트들을 모두 보여줌(수정은 안되고..)
+     */    
+    @RequestMapping( value="/v1/document/{docId}/signComplete/{signerId}", method= {RequestMethod.GET} )
+    public @ResponseBody PdfResponse contractView(@PathVariable String docId){        
+        //return docService.getDoc(docId);
+        return null;
+    }
 
 
     // 6. 생성자 pdf 작성 완료
     //@RequestMapping( value="/v1/document/{docId}/signer/{signerId}", method= {RequestMethod.POST} )    
-    @RequestMapping( value="/v1/document/{docId}/signComplete/{signerId}", method= {RequestMethod.GET} )
+    @RequestMapping( value="/v1/document/{docId}/signComplete/{signerId}", method= {RequestMethod.POST} )
 	//public @ResponseBody String req(@RequestBody Doc doc) {
-    public @ResponseBody PdfResponse req() {
+    public @ResponseBody PdfResponse signComplete() {
         //log.info("req called");
         System.out.println("pdf 생성");
         

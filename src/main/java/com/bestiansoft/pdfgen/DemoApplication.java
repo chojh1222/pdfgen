@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class DemoApplication {
 
 	public static void main(String[] args) {
+		String workingDir = System.getProperty("user.dir");
+	   System.out.println("Current working directory : " + workingDir);
 		SpringApplication.run(DemoApplication.class, args);
 	}
 
