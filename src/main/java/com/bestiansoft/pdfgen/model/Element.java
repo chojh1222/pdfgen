@@ -1,16 +1,12 @@
 package com.bestiansoft.pdfgen.model;
 
 import java.util.Date;
-import java.util.List;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -19,10 +15,9 @@ import javax.persistence.TemporalType;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import org.hibernate.annotations.GenericGenerator;
+
+import lombok.Data;
 
 @Entity
 @Data
@@ -31,9 +26,6 @@ public class Element {
     @Id @GeneratedValue(generator="system-uuid")
     @GenericGenerator(name="system-uuid", strategy = "uuid")
     private String eleId;
-
-    @Column(name="DOC_ID")
-    private String docId;
 
     @Column(name="SIGN_ID")
     private String SignerNo;
@@ -51,7 +43,7 @@ public class Element {
     @Column(name="ELE_POS_Y")
     private Float y;
 
-    @Column(name="ELE_HIGHT")
+    @Column(name="ELE_HEIGHT")
     private Float h;
 
     @Column(name="ELE_WIDTH")
