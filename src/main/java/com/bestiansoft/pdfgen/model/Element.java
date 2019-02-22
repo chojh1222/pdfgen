@@ -56,14 +56,14 @@ public class Element {
     @Column(name="PAGE")
     private Integer page;
 
-    @JsonBackReference
-    @ManyToOne
-    private Doc doc;
-    
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="REG_DT")
     private Date regDt = new Date();
-        
+
+    @JsonBackReference
+    @ManyToOne
+    private Doc doc;
+            
     @JsonIgnore
 	public boolean isSign() {
 		return "sign".equals(inputType);

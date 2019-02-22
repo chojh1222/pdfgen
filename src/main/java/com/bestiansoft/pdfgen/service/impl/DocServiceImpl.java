@@ -66,10 +66,11 @@ public class DocServiceImpl implements DocService{
 			System.out.println("객체가 없다.");
 			return null;
 		}
+		
 
 		System.out.println("doc info ");
 		System.out.println("doc info " + doc.getDocId());
-		System.out.println("doc info " + doc.getDoc());	// file_path
+		System.out.println("doc info " + doc.getFilePath());	// file_path
 		System.out.println("doc info " + doc.getFileName());	// file_path
 
 		// 파일경로를 조회한다.
@@ -80,7 +81,7 @@ public class DocServiceImpl implements DocService{
 		String url = this.getClass().getResource("").getPath();
 		System.out.println("url : " + url);
 		
-		String pFilePath = doc.getDoc();
+		String pFilePath = doc.getFilePath();
 		String pFileName = doc.getFileName();
 		
 		List<Element> elements = doc.getElement();
@@ -139,6 +140,8 @@ public class DocServiceImpl implements DocService{
 				PDPageContentStream contentStream = new PDPageContentStream(document, page, AppendMode.APPEND, true, true);
 
 				if(input.isSign()) {
+					// DB에 있는 이미지를 읽어와서 넣어야 되는 문제가 있다...
+					
 					//String signUrl = pdfGenConfig.getDocHome() + input.getSignUrl();
 					//PDImageXObject pdImage = PDImageXObject.createFromFile(signUrl, document);
 					
@@ -146,17 +149,17 @@ public class DocServiceImpl implements DocService{
 
 				} else if(input.isText()) {
 
-					System.out.println("여기까지 오나?" + input.getAddText());
+					//System.out.println("여기까지 오나?" + input.getAddText());
 					
 					contentStream.beginText();
 					
-					// 폰트를 일거온다.
+					// 폰트를 읽어온다.
 					InputStream fontStream = new FileInputStream("C:\\Windows\\Fonts\\NanumGothic_3.ttf");
 					PDType0Font fontNanum = PDType0Font.load(document, fontStream);
 					//contentStream.setFont( getFont(input.getFont()), input.getCharSize());
 					contentStream.setFont( fontNanum, input.getCharSize());
 					contentStream.newLineAtOffset(x_adj, y_adj);					
-					contentStream.showText(input.getAddText());
+					//contentStream.showText(input.getAddText()); // 값 셋팅
 					contentStream.endText();
 				}
 				contentStream.close();
