@@ -1,21 +1,18 @@
 package com.bestiansoft.pdfgen.service;
 
+import com.bestiansoft.pdfgen.domain.PdfResponse;
 import com.bestiansoft.pdfgen.model.Doc;
-import com.bestiansoft.pdfgen.repo.DocRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class DocService {
-
-    @Autowired
-    DocRepository docRepository;
+public interface DocService {
 
     @Transactional
-    public Doc getDoc(String docId) {
-        Doc doc = docRepository.findById(docId).orElse(null);
-        return doc;
-    }
+    public Doc getDoc(String docId);
+
+    
+    //PdfResponse createPdf(String docId);
+    public PdfResponse createPdf(String docId);
 }
