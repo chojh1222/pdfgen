@@ -1,11 +1,17 @@
 package com.bestiansoft.pdfgen.model;
 
 import java.util.Date;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -16,11 +22,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.hibernate.annotations.GenericGenerator;
+
 @Entity
 @Data
 @Table(name="ECS_ELE_MGT")
 public class Element {
-    @Id
+    @Id @GeneratedValue(generator="system-uuid")
+    @GenericGenerator(name="system-uuid", strategy = "uuid")
     private String eleId;
 
     @Column(name="DOC_ID")
@@ -28,6 +37,10 @@ public class Element {
 
     @Column(name="SIGN_ID")
     private String SignerNo;
+
+    @JsonBackReference
+    @ManyToOne
+    private Doc doc;
 
     @Column(name="ELE_TYPE")
     private String inputType;
@@ -51,7 +64,10 @@ public class Element {
     private Integer charSize;
 
     @Column(name="ELE_ORD")
-    private String eleOrd;
+    private Integer eleOrd;
+
+    // @OneToMany(mappedBy = "elem", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    // private List<SignerInput> signerInput; 
 
     @Column(name="PAGE")
     private Integer page;
@@ -59,10 +75,6 @@ public class Element {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="REG_DT")
     private Date regDt = new Date();
-
-    @JsonBackReference
-    @ManyToOne
-    private Doc doc;
             
     @JsonIgnore
 	public boolean isSign() {
@@ -71,6 +83,10 @@ public class Element {
 	@JsonIgnore
 	public boolean isText() {
 		return "text".equals(inputType);
-	}    
-
+    }        
+    
+    @OneToOne(mappedBy="element")
+    private ElementSign elementSign;
 }
+
+

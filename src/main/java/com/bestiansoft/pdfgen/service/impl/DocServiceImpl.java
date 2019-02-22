@@ -40,9 +40,15 @@ public class DocServiceImpl implements DocService{
 
     @Transactional
     @Override
-    public Doc getDoc(String docId) {
+	public Doc getDoc(String docId) {
         Doc doc = docRepository.findById(docId).orElse(null);
         return doc;
+    }
+
+	@Transactional
+	@Override
+    public void saveDoc(Doc doc) {
+        docRepository.save(doc);
     }
 	
 	

@@ -1,7 +1,6 @@
 package com.bestiansoft.pdfgen.controller;
 
 import java.io.IOException;
-import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.List;
 
