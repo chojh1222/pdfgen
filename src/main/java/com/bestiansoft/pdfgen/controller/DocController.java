@@ -172,7 +172,8 @@ public class DocController {
 
     // 6. 생성자 pdf 작성 완료
     //@RequestMapping( value="/v1/document/{docId}/signer/{signerId}", method= {RequestMethod.POST} )    
-    @RequestMapping( value="/v1/document/{docId}/signComplete/{signerId}", method= {RequestMethod.POST} )
+    // @RequestMapping( value="/v1/document/{docId}/signComplete/{signerId}", method= {RequestMethod.POST} )
+    @RequestMapping( value="/v1/document/{docId}/signComplete1/{signerId}", method= {RequestMethod.GET} )
 	//public @ResponseBody String req(@RequestBody Doc doc) {
     public @ResponseBody PdfResponse signComplete() {
         //log.info("req called");

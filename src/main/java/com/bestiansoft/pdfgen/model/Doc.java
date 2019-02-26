@@ -36,6 +36,7 @@ public class Doc {
 
     private String pdfName;
     private String pdfPath;
+    private String pdfSignId;
     
     @Temporal(TemporalType.TIMESTAMP)
     private Date pdfRegDt;
@@ -63,4 +64,8 @@ public class Doc {
             this.addElement(elem);
         }
     }
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL)
+    private List<DocHistory> history;
 }

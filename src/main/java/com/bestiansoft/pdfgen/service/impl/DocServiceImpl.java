@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 
 import com.bestiansoft.pdfgen.config.PdfGenConfig;
@@ -23,6 +24,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -78,7 +80,7 @@ public class DocServiceImpl implements DocService {
 			return null;
 		}
 
-		docId = "doc1";
+		docId = "doc1";	// 임시
 		Doc doc = docRepository.findById(docId).orElse(null);
 
 		if (doc == null) {
@@ -91,42 +93,41 @@ public class DocServiceImpl implements DocService {
 		System.out.println("doc info " + doc.getFilePath()); // file_path
 		System.out.println("doc info " + doc.getFileName()); // file_path
 
-		// 파일경로를 조회한다.
-		ClassPathResource resource = new ClassPathResource("test_file_name.pdf");
-		System.out.println("resource.getPath() : " + resource.getPath());
-
-		String url = this.getClass().getResource("").getPath();
-		System.out.println("url : " + url);
-
 		String pFilePath = doc.getFilePath();
 		String pFileName = doc.getFileName();
 
+		// 저장할 신규 파일명
+		String docSave = pFileName + "_" + (seq++) + ".pdf";
+		String docHome = pdfGenConfig.getDocHome();
+		// 파일경로를 조회한다.
+		// ClassPathResource resource = new ClassPathResource("test_file_name.pdf");
+		// System.out.println("resource.getPath() : " + resource.getPath());
+
+		// String url = this.getClass().getResource("").getPath();
+		// System.out.println("url : " + url);	
+
 		List<Element> elements = doc.getElements();
 
-		String docSave = pFileName + "_" + (seq++) + ".pdf";
+		// 저장해야할 전체 경로
+		String fnSave = docHome + docSave;
+		
+		//String fnDoc = docHome + docSave;
+		
+		// File fDoc = new File(tmpPath + "test_file_name.pdf");
+		// if (!fDoc.exists()) {
+		// 	// log.error("not exist {}", fnDoc);
+		// 	System.out.println("not exist {} : " + pFilePath);
+		// 	return null;
+		// } else {
+		// 	// log.info("exist {}", fnDoc);
+		// }
 
-		String fnDoc = pdfGenConfig.getDocHome() + docSave;
-		System.out.println("fnDoc :: " + fnDoc);
+		// if (!fDoc.canRead()) {
+		// 	// log.error("can't read");
+		// 	System.out.println("can't read");
+		// }
 
-		// File fDoc = new File(pFilePath);
-		// File fDoc = new File(resource.getPath());
-		String tmpPath = "D:\\ktpdf\\pdfgen\\src\\main\\resources\\";
-
-		File fDoc = new File(tmpPath + "test_file_name.pdf");
-		if (!fDoc.exists()) {
-			// log.error("not exist {}", fnDoc);
-			System.out.println("not exist {} : " + pFilePath);
-			return null;
-		} else {
-			// log.info("exist {}", fnDoc);
-		}
-
-		if (!fDoc.canRead()) {
-			// log.error("can't read");
-			System.out.println("can't read");
-		}
-
-		String fnSave = pdfGenConfig.getDocHome() + docSave;
+		
 
 		// List<InputBase> inputs = inputReq.getInputs();
 		// if(inputs==null || inputs.size()<1) {
@@ -135,7 +136,7 @@ public class DocServiceImpl implements DocService {
 		// }
 
 		// 기존에 파일을 읽어야 한다.
-		try (PDDocument document = PDDocument.load(new File(tmpPath + "test_file_name.pdf"))) {
+		try (PDDocument document = PDDocument.load(new File(pFilePath))) {
 
 			for (Element input : elements) {
 
@@ -144,6 +145,8 @@ public class DocServiceImpl implements DocService {
 				PDRectangle rectangle = page.getMediaBox();
 				float h = rectangle.getHeight();
 				float w = rectangle.getWidth();
+				String fontType = input.getFont();
+				String pdFont = pdfGenConfig.getFont1();
 				System.out.println("h: " + h + " w : " + w);
 
 				float x_adj = input.getX() * w;
@@ -154,30 +157,36 @@ public class DocServiceImpl implements DocService {
 				// log.info("adj="+x_adj+", " + y_adj + ", " + w_adj + ", " + h_adj);
 				System.out.println("adj=" + x_adj + ", " + y_adj + ", " + w_adj + ", " + h_adj);
 
-				PDPageContentStream contentStream = new PDPageContentStream(document, page, AppendMode.APPEND, true,
-						true);
+				PDPageContentStream contentStream = new PDPageContentStream(document, page, AppendMode.APPEND, true, true);
 
 				if (input.isSign()) {
 					// DB에 있는 이미지를 읽어와서 넣어야 되는 문제가 있다...
+					// 특정 이미지 로고를 넣기로 함
 
-					// String signUrl = pdfGenConfig.getDocHome() + input.getSignUrl();
-					// PDImageXObject pdImage = PDImageXObject.createFromFile(signUrl, document);
+					String signUrl = pdfGenConfig.getImgPath();
+					PDImageXObject pdImage = PDImageXObject.createFromFile(signUrl, document);
 
-					// contentStream.drawImage(pdImage, x_adj, y_adj, w_adj, h_adj);
+					contentStream.drawImage(pdImage, x_adj, y_adj, w_adj, h_adj);
 
 				} else if (input.isText()) {
 
 					// System.out.println("여기까지 오나?" + input.getAddText());
 
 					contentStream.beginText();
-
+					
 					// 폰트를 읽어온다.
-					InputStream fontStream = new FileInputStream("C:\\Windows\\Fonts\\NanumGothic_3.ttf");
-					PDType0Font fontNanum = PDType0Font.load(document, fontStream);
+					if ("Times-Roman".equals(fontType)){
+						pdFont = pdfGenConfig.getFont1();
+					}else if ("Courier-Bold".equals(fontType)){
+						pdFont = pdfGenConfig.getFont1();
+					}
+
+					InputStream fontStream = new FileInputStream(pdFont);
+					PDType0Font pdfType0Font = PDType0Font.load(document, fontStream);
 					// contentStream.setFont( getFont(input.getFont()), input.getCharSize());
-					contentStream.setFont(fontNanum, input.getCharSize());
+					contentStream.setFont(pdfType0Font, input.getCharSize());
 					contentStream.newLineAtOffset(x_adj, y_adj);
-					// contentStream.showText(input.getAddText()); // 값 셋팅
+					contentStream.showText(input.getAddText()); // 값 셋팅
 					contentStream.endText();
 				}
 				contentStream.close();
@@ -187,6 +196,14 @@ public class DocServiceImpl implements DocService {
 
 			document.save(fnSave);
 			document.close();
+
+			
+			// pdf 저장 후 DB값 입력
+			doc.setPdfName(docSave);
+			doc.setPdfPath(fnSave);
+			doc.setPdfRegDt(new Date());
+			docRepository.save(doc);
+
 
 			return new PdfResponse(fnSave);
 		} catch (IOException e) {
