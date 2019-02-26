@@ -33,12 +33,8 @@ public class ElementSign {
     private String eleValue;
 
     @Lob
-    private String eleSignValue;
-    
-    private String signYn;
+    private String eleSignValue;    
 
     @Temporal(TemporalType.TIMESTAMP)    
-    private Date regDt = new Date();  
-    
-    
+    private Date regDt = new Date();      
 }
