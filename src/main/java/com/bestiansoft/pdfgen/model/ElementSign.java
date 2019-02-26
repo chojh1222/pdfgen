@@ -8,6 +8,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -27,7 +28,7 @@ public class ElementSign {
     @JsonBackReference
     @OneToOne
     @MapsId
-    @JoinColumn(name="ELE_ID")
+    @PrimaryKeyJoinColumn(name="ELE_ID")
     private Element element;
 
     private String eleValue;
@@ -35,10 +36,6 @@ public class ElementSign {
     @Lob
     private String eleSignValue;
     
-    private String signYn;
-
     @Temporal(TemporalType.TIMESTAMP)    
     private Date regDt = new Date();  
-    
-    
 }

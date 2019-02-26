@@ -88,18 +88,18 @@ public class Element {
     }        
     
     @JsonManagedReference
-    @OneToOne(mappedBy="element", cascade=CascadeType.ALL)
-    private ElementSign es;
+    @OneToOne(mappedBy="element", cascade=CascadeType.MERGE)
+    private ElementSign inputValue;
 
 
-    // /**
-    //  * @param elements the elements to set
-    //  */
-    // public void setElementSign(ElementSign elementSign) {
-    //     this.elementSign = elementSign;
-    //     if(elementSign != null)
-    //         elementSign.setElement(this);
-    // }
+    /**
+     * @param elements the elements to set
+     */
+    public void setElementSign(ElementSign inputValue) {
+        this.inputValue = inputValue;
+        if(inputValue != null)
+            inputValue.setElement(this);
+    }
 }
 
 
