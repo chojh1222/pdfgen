@@ -45,13 +45,13 @@ public class Doc {
     // @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER)
     // private List<Signer> signers;
     @JsonManagedReference
-    @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL)
     private List<Element> elements;
 
     public void addElement(Element element) {
         if(this.elements == null)
             this.elements = new ArrayList<>();
-        this.getElements().add(element);
+        this.getElements().add(element); 
         element.setDoc(this);
     }
 
@@ -64,8 +64,4 @@ public class Doc {
             this.addElement(elem);
         }
     }
-
-    @JsonManagedReference
-    @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER)  
-    private List<Element> element;
 }

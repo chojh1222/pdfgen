@@ -6,14 +6,20 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+<<<<<<< HEAD
+=======
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+>>>>>>> 692fbd880c81d970993582150995ceef3f2d53b0
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -28,10 +34,11 @@ public class Element {
     private String eleId;
 
     @Column(name="SIGN_ID")
-    private String SignerNo;
+    private String signerNo;
 
     @JsonBackReference
     @ManyToOne
+    @JoinColumn(name="DOC_ID")
     private Doc doc;
 
     @Column(name="ELE_TYPE")
@@ -58,15 +65,20 @@ public class Element {
     @Column(name="ELE_ORD")
     private Integer eleOrd;
 
-    // @OneToMany(mappedBy = "elem", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    // private List<SignerInput> signerInput; 
-
     @Column(name="PAGE")
     private Integer page;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="REG_DT")
     private Date regDt = new Date();
+
+    // 사용자 입력값
+    @Transient
+    private String addText;
+
+    // 사용자 입력사인
+    @Transient
+    private String elementSign;
             
     @JsonIgnore
 	public boolean isSign() {
@@ -77,8 +89,19 @@ public class Element {
 		return "text".equals(inputType);
     }        
     
-    @OneToOne(mappedBy="element")
-    private ElementSign elementSign;
+    @JsonManagedReference
+    @OneToOne(mappedBy="element", cascade=CascadeType.ALL)
+    private ElementSign es;
+
+
+    // /**
+    //  * @param elements the elements to set
+    //  */
+    // public void setElementSign(ElementSign elementSign) {
+    //     this.elementSign = elementSign;
+    //     if(elementSign != null)
+    //         elementSign.setElement(this);
+    // }
 }
 
 
