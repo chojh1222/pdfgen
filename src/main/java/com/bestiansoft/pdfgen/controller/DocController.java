@@ -7,6 +7,7 @@ import com.bestiansoft.pdfgen.model.ElementSign;
 import com.bestiansoft.pdfgen.service.DocService;
 import com.bestiansoft.pdfgen.model.Signer;
 import com.bestiansoft.pdfgen.repo.ElementRepository;
+import com.bestiansoft.pdfgen.repo.ElementSignRepository;
 import com.bestiansoft.pdfgen.vo.ElementsVo;
 import com.bestiansoft.pdfgen.vo.SignVo;
 
@@ -26,16 +27,39 @@ import java.io.IOException;
 import java.util.*;
 
 import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
 
 @CrossOrigin(origins = "*")
 @RestController
 public class DocController {
+
+    static long cnt = 0;
 
     @Autowired
     DocService docService;
 
     @Autowired
     ElementRepository elementRepository;
+
+    @Autowired
+    ElementSignRepository elementSignRepository;
+
+    
+
+    @RequestMapping(value = "/v1/test", method = { RequestMethod.GET })
+    public void test() {
+        // Element e = new Element();
+        // ElementSign es = new ElementSign();
+        // es.setEleValue("12345");
+
+        // es.setElement(e);
+        // e.setElementSign(es);
+        
+
+        // elementRepository.save(e);
+        Element e = elementRepository.findById("402880926928ec53016928ec75f50000").orElse(null);
+        System.out.println( e.getElementSign() );
+    }
 
     // 1. 생성자용 pdf 조회 - 임시
     @RequestMapping(value = "/v1/document/{docId}", method = { RequestMethod.GET })
@@ -45,7 +69,8 @@ public class DocController {
         Map<String, Object> ret = new HashMap<>();
 
         // ret.put("doc", doc.getFilePath());
-        ret.put("doc", "http://localhost:8080/sample.pdf");
+        // ret.put("doc", "http://13.209.43.245:8080/sample.pdf");
+        ret.put("doc", "http://localhost:8888/sample22.pdf");
         ret.put("signers", Signer.signers);
 
         return ret;
@@ -67,54 +92,59 @@ public class DocController {
     @RequestMapping(value = "/v1/document/{docId}/signer/{signerNo}", method = { RequestMethod.GET })
     public Map<String, Object> getDocToSign(@PathVariable String docId, @PathVariable String signerNo) {
         Doc doc = docService.getDoc(docId);
+        List<Element> elements = docService.getElements(doc, signerNo);
 
         Map<String, Object> ret = new HashMap<>();
-        List<Element> allElem = doc.getElements();
-        List<Element> signerElem = new ArrayList<>();
-
-        for (Element e : allElem) {
-            if (e.getSignerNo().equals(signerNo))
-                signerElem.add(e);
-        }
-
         ret.put("doc", doc.getFilePath());
-        ret.put("inputs", signerElem);
+        ret.put("inputs", elements);
         ret.put("signer", Signer.getSigner(signerNo));
 
         return ret;
     }
 
     @RequestMapping(value = "/v1/signer/{signerNo}/signs/sign", method = { RequestMethod.POST })
-    public void saveSign(@PathVariable String signerNo, @RequestBody SignVo signVo) throws IOException {
-        // String encSignImg = signVo.getSignImg();
-        // String partSeparator = ",";
-        // byte[] decodedByte = null;
-        // if (encSignImg.contains(partSeparator)) {
-        //     encSignImg = encSignImg.split(partSeparator)[1];
-        //     decodedByte = Base64.getDecoder().decode(encSignImg);
-        // }
-
+    public Map<String, Object> saveSign(HttpServletRequest request, @PathVariable String signerNo, @RequestBody SignVo signVo) throws IOException {
         String data = signVo.getSignImg();
         String base64Image = data.split(",")[1];
         byte[] imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(base64Image);
+
+        ElementSign es = new ElementSign();
+        es.setEleSignValue(base64Image);
+
+        elementSignRepository.save(es);
+
+
         BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageBytes));
 
-        
         // write the image to a file
-        File outputfile = new File("src/main/resources/static/test_image2.png");
+        String filename = signerNo + "_" + (++cnt) + ".png";
+        String filepath = "src/main/resources/static/signs/" + filename;
+        File outputfile = new File(filepath);
         ImageIO.write(img, "png", outputfile);
+
+        String domain = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+        String retPath = domain + "/signs/" + filename;
+
+        Map<String, Object> ret = new HashMap<>();
+        ret.put("signImgs", retPath);
+        return ret;
     }
 
     // 4. 생성자 및 참여자 서명 완료
     @RequestMapping(value = "/v1/document/{docId}/signer/{signerNo}", method = { RequestMethod.POST })
-    public void saveInput(@PathVariable String docId, @PathVariable String signerNo) {
-        Element elem = new Element();
-        elem.setEleId("402880926913c3d70169142e16d10004");
-        ElementSign value = new ElementSign();
-        value.setEleValue("test input!");
-        elem.setElementSign(value);
+    public void saveInput(@PathVariable String docId, @PathVariable String signerNo, @RequestBody ElementsVo elementsVo) {
 
-        elementRepository.save(elem);
+        List<Element> inputElements = elementsVo.getInputs();
+        List<ElementSign> inputs = new ArrayList<>();
+        for(Element inputElement : inputElements) {
+            ElementSign es = new ElementSign();
+            es.setId(inputElement.getEleId());
+            es.setEleValue(inputElement.getAddText());
+            es.setEleSignValue(inputElement.getElementSign());
+            inputs.add(es);
+        }
+
+        docService.saveInput(inputs);
     }
         
     /**

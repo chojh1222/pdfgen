@@ -45,7 +45,7 @@ public class Doc {
     // @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER)
     // private List<Signer> signers;
     @JsonManagedReference
-    @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL)
     private List<Element> elements;
 
     public void addElement(Element element) {
@@ -64,8 +64,4 @@ public class Doc {
             this.addElement(elem);
         }
     }
-
-    @JsonManagedReference
-    @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER)  
-    private List<Element> element;
 }
