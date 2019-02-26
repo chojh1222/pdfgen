@@ -153,7 +153,9 @@ public class DocController {
             inputs.add(es);
         }
 
-        docService.saveSignerInput(inputs);
+        elementSignRepository.save(inputs.get(0));
+
+        // docService.saveSignerInput(inputs);
     }
         
     /**
