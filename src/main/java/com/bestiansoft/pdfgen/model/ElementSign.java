@@ -5,11 +5,8 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-<<<<<<< HEAD
-=======
 import javax.persistence.Lob;
 import javax.persistence.MapsId;
->>>>>>> 692fbd880c81d970993582150995ceef3f2d53b0
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;

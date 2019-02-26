@@ -2,6 +2,7 @@ package com.bestiansoft.pdfgen.model;
 
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -16,10 +17,7 @@ import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-<<<<<<< HEAD
-=======
 import com.fasterxml.jackson.annotation.JsonManagedReference;
->>>>>>> 692fbd880c81d970993582150995ceef3f2d53b0
 
 import org.hibernate.annotations.GenericGenerator;
 
