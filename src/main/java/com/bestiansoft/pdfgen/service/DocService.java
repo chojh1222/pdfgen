@@ -18,5 +18,5 @@ public interface DocService {
 
     public List<Element> getElements(Doc doc, String signerNo);
 
-    public void saveInput(List<ElementSign> input);
+    public void saveSignerInput(List<ElementSign> input);
 }

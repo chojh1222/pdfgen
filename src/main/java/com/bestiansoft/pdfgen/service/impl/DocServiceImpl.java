@@ -227,7 +227,7 @@ public class DocServiceImpl implements DocService {
 	}
 
 	@Override
-	public void saveInput(List<ElementSign> input) {
+	public void saveSignerInput(List<ElementSign> input) {
 		elementSignRepository.saveAll(input);
 	}
 }

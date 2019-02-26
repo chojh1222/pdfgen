@@ -69,7 +69,7 @@ public class DocController {
         Map<String, Object> ret = new HashMap<>();
 
         // ret.put("doc", doc.getFilePath());
-        ret.put("doc", "http://localhost:8080/sample.pdf");
+        ret.put("doc", "http://localhost:8888/sample.pdf");
         ret.put("signers", Signer.signers);
 
         return ret;
@@ -81,7 +81,7 @@ public class DocController {
         Doc doc = new Doc();
 
         doc.setDocId(docId);
-        doc.setFilePath("http://13.209.43.245:8080/sample.pdf");
+        doc.setFilePath("http://localhost:8888/sample.pdf");
         doc.setElements(elementsVo.getInputs());
 
         docService.saveDoc(doc);
@@ -140,18 +140,20 @@ public class DocController {
     // 4. 생성자 및 참여자 서명 완료
     @RequestMapping(value = "/v1/document/{docId}/signer/{signerNo}", method = { RequestMethod.POST })
     public void saveInput(@PathVariable String docId, @PathVariable String signerNo, @RequestBody ElementsVo elementsVo) {
-
+        
         List<Element> inputElements = elementsVo.getInputs();
         List<ElementSign> inputs = new ArrayList<>();
         for(Element inputElement : inputElements) {
             ElementSign es = new ElementSign();
-            es.setId(inputElement.getEleId());
+            
             es.setEleValue(inputElement.getAddText());
             es.setEleSignValue(inputElement.getElementSign());
+
+            inputElement.setElementSign(es);
             inputs.add(es);
         }
 
-        docService.saveInput(inputs);
+        docService.saveSignerInput(inputs);
     }
         
     /**
