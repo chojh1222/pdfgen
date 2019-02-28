@@ -191,5 +191,19 @@ public class DocController {
 
         return docService.createPdf(docId);
         // return null;
-	}
+    }
+    
+    // 7. 사용자별 서명결과 조회
+    @RequestMapping( value="/v1/document/{docId}/docSign/{signerId}", method= {RequestMethod.GET} )
+    public Map<String, Object> docSign(@PathVariable String docId, @PathVariable String signerId) {
+        
+        // 문서 및 사용자 유저로 조회
+        Map<String, Object> ret = new HashMap<>();
+        ret.put("docId", "");
+        ret.put("signerId", "");
+        ret.put("signYn", "");
+        ret.put("signDt", "");
+
+        return ret;
+    }
 }
