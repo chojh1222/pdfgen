@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -76,7 +77,7 @@ public class Element {
 
     // 사용자 입력사인
     @Transient
-    private String elementSign;
+    private String signUrl;
             
     @JsonIgnore
 	public boolean isSign() {
@@ -88,18 +89,23 @@ public class Element {
     }        
     
     @JsonManagedReference
-    @OneToOne(mappedBy="element", cascade=CascadeType.MERGE)
-    private ElementSign inputValue;
+    @OneToOne(mappedBy="element", cascade=CascadeType.ALL)
+    private ElementSign elementSign;
 
 
     /**
      * @param elements the elements to set
      */
-    public void setElementSign(ElementSign inputValue) {
-        this.inputValue = inputValue;
-        if(inputValue != null)
-            inputValue.setElement(this);
+    public void setElementSign(ElementSign elementSign) {
+        this.elementSign = elementSign;
+        if(elementSign != null)
+            elementSign.setElement(this);
     }
+
+
 }
+
+
+    
 
 

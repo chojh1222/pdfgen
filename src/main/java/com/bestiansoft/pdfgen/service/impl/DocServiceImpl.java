@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -48,23 +49,25 @@ public class DocServiceImpl implements DocService {
 	// 문서생성 seq 번호
 	private static int seq = 0;
 
-	@Transactional
 	@Override
 	public Doc getDoc(String docId) {
 		Doc doc = docRepository.findById(docId).orElse(new Doc());
 		return doc;
 	}
 
-	@Transactional
 	@Override
 	public void saveDoc(Doc doc) {
 		docRepository.save(doc);
 	}
 
-	@Transactional
 	@Override
 	public List<Element> getElements(Doc doc, String signerNo) {
 		return elementRepository.findByDocAndSignerNo(doc, signerNo);
+	}
+
+	@Override
+	public List<Element> getElements(Doc doc) {
+		return elementRepository.findByDoc(doc);
 	}
 
 	// public PdfResponse createPdf(InputReq inputReq) {
@@ -226,8 +229,34 @@ public class DocServiceImpl implements DocService {
 		return pdFont;
 	}
 
+	@Transactional
 	@Override
-	public void saveSignerInput(List<ElementSign> input) {
-		elementSignRepository.saveAll(input);
+	public void saveSignerInput(List<Element> inputElements) {
+        for(Element inputElement : inputElements) {
+			String addText = inputElement.getAddText();
+			String signUrl = inputElement.getSignUrl();
+			String inputType = inputElement.getInputType();
+			byte[] imageBytes = null;
+			if("sign".equals(inputType) && signUrl != null && signUrl.contains("base64")) {
+				String base64Image = signUrl.split(",")[1];
+				imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(base64Image);
+			}
+
+
+			Element elem = elementRepository.findById(inputElement.getEleId()).get();
+			
+			// db에서 해당 element id로 저장된 record를 찾을 수 없을 경우 종료
+			if(elem == null)
+				return;
+
+			// 이전에 해당 element에 입력된 값이 없다면 새로입력
+			if(elem.getElementSign() == null)
+				elem.setElementSign(new ElementSign());
+
+			elem.getElementSign().setEleValue(addText);
+			elem.getElementSign().setEleSignValue(imageBytes);
+        }
 	}
+
+	
 }

@@ -2,6 +2,7 @@ package com.bestiansoft.pdfgen.model;
 
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -28,14 +29,17 @@ public class ElementSign {
     @JsonBackReference
     @OneToOne
     @MapsId
-    @PrimaryKeyJoinColumn(name="ELE_ID")
+    @JoinColumn(name="ELE_ID")
     private Element element;
 
     private String eleValue;
 
     @Lob
-    private String eleSignValue;
+    private byte[] eleSignValue;
     
     @Temporal(TemporalType.TIMESTAMP)    
     private Date regDt = new Date();  
+
+
+    
 }
