@@ -1,23 +1,15 @@
 package com.bestiansoft.pdfgen.controller;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletResponse;
-// import javax.ws.rs.Produces;
-
-import com.bestiansoft.pdfgen.config.PdfGenConfig;
 import com.bestiansoft.pdfgen.domain.PdfResponse;
 import com.bestiansoft.pdfgen.model.Doc;
 import com.bestiansoft.pdfgen.model.Element;
 import com.bestiansoft.pdfgen.model.ElementSign;
+import com.bestiansoft.pdfgen.service.DocService;
 import com.bestiansoft.pdfgen.model.Signer;
 import com.bestiansoft.pdfgen.repo.ElementRepository;
 import com.bestiansoft.pdfgen.repo.ElementSignRepository;
-import com.bestiansoft.pdfgen.service.DocService;
 import com.bestiansoft.pdfgen.vo.ElementsVo;
+import com.bestiansoft.pdfgen.vo.SignVo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Base64Utils;
@@ -29,6 +21,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -45,50 +45,45 @@ public class DocController {
     @Autowired
     ElementSignRepository elementSignRepository;
 
-    @Autowired
-	PdfGenConfig pdfGenConfig;
+    
 
-    /**
-     * pdf 파일을 읽어 브라우저에 보여줌
-     * 경로를 어떻게 받아야 하는가.../pdf/test/test.pdf 로 온다면??
-     */
-    @RequestMapping(value = "/docPdf/{filename}", method = { RequestMethod.GET })
-    public void readPdf(HttpServletResponse response, @PathVariable String filename) throws Exception {
-        System.out.println("filename : " + filename);
-        docService.readPdf(response, filename);
+    @RequestMapping(value = "/v1/test", method = { RequestMethod.GET })
+    public void test() {
+        // Element e = new Element();
+        // ElementSign es = new ElementSign();
+        // es.setEleValue("12345");
+
+        // es.setElement(e);
+        // e.setElementSign(es);
+        
+
+        // elementRepository.save(e);
+        Element e = elementRepository.findById("402880926928ec53016928ec75f50000").orElse(null);
+        System.out.println( e.getElementSign() );
     }
 
     // 1. 생성자용 pdf 조회 - 임시
     @RequestMapping(value = "/v1/document/{docId}", method = { RequestMethod.GET })
     public Map<String, Object> getDoc(@PathVariable String docId) {
-        System.out.println("1.생성자용 pdf 조회 - 임시");
-        
         // Doc doc = docService.getDoc(docId);
-        
-        Map<String, Object> doc = new HashMap<>();
-        doc.put("docId", docId);
-        doc.put("docName", "테스트문서");
-        doc.put("fileName", "계약서1.pdf");
-        doc.put("filePath", "http://localhost:8888" + pdfGenConfig.getContextPath() + "/sample.pdf");
-        doc.put("userId", "signer1");
-        doc.put("signers", Signer.signers); // 생성자, 참여자목록
 
-        return doc;
+        Map<String, Object> ret = new HashMap<>();
+
+        // ret.put("doc", doc.getFilePath());
+        ret.put("doc", "http://localhost:8888/sample.pdf");
+        ret.put("signers", Signer.signers);
+
+        return ret;
     }
 
     // 2. 생성자 pdf 작성 완료
     @RequestMapping(value = "/v1/document/{docId}", method = { RequestMethod.POST })
-    public void saveDoc(@PathVariable String docId, @RequestBody Doc doc) {
-        //Doc doc = new Doc();
-        String urlFilePath = doc.getFilePath();
-        // filePath 가 url로 넘어온다. http://localhost:8888/docPdf/sample.pdf
-        System.out.println("doc.filePath : " + urlFilePath);
-        String dbFilePath = urlFilePath.substring(urlFilePath.indexOf(pdfGenConfig.getContextPath()) + pdfGenConfig.getContextPath().length(), urlFilePath.length() );
-        System.out.println(" dbFilePath : " + dbFilePath);
+    public void saveDoc(@PathVariable String docId, @RequestBody ElementsVo elementsVo) {
+        Doc doc = new Doc();
 
         doc.setDocId(docId);
-        doc.setFilePath(pdfGenConfig.getDocHome()+ dbFilePath);
-        // doc.setElements(doc.getElements());
+        doc.setFilePath("http://localhost:8888/sample.pdf");
+        doc.setElements(elementsVo.getInputs());
 
         docService.saveDoc(doc);
     }
@@ -113,6 +108,7 @@ public class DocController {
     public Map<String, Object> getDocToSign(@PathVariable String docId, @PathVariable String signerNo) {
         Doc doc = docService.getDoc(docId);
         // List<Element> elements = docService.getElements(doc);
+
         System.out.println("signerNo : " + signerNo);
         List<Element> elements = docService.getElements(doc, signerNo);        
 
@@ -129,31 +125,45 @@ public class DocController {
         }
 
         Map<String, Object> ret = new HashMap<>();
-        String docFilePath = doc.getPdfPath()==null ? doc.getFilePath() : doc.getPdfPath(); // 서명한 pdf를 불러오고 없으면 최초 파일을 불러와        
-        File filePath = new File(docFilePath);
-        if(!filePath.exists()){
-            ret.put("filePath", "file not exists");
-        }else{
-            
-            // 브라우저에서 열수 있게 url 형식으로 만들어 본다...이게 맞는건지 모르겠네..
-            String urlFilePath = "http://localhost:8888" + pdfGenConfig.getContextPath() + docFilePath.replace(pdfGenConfig.getDocHome(), "");
-            System.out.println("urlFilePath :: " + urlFilePath);
-
-            ret.put("filePath", urlFilePath);
-            ret.put("inputs", elements);
-            ret.put("signer", Signer.getSigner(signerNo));  // 사용자 정보조회 구현 필요    
-        }
+        ret.put("doc", doc.getFilePath());
+        ret.put("inputs", elements);
+        ret.put("signer", Signer.getSigner(signerNo));
 
         return ret;
     }
 
+    @RequestMapping(value = "/v1/signer/{signerNo}/signs/sign", method = { RequestMethod.POST })
+    public void saveSign(HttpServletRequest request, @PathVariable String signerNo, @RequestBody SignVo signVo) throws IOException {
+        String data = signVo.getSignImg();
+        System.out.println(data);
+        // String base64Image = data.split(",")[1];
+        // byte[] imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(base64Image);
+
+        // BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageBytes));
+
+        // // write the image to a file
+        // String filename = signerNo + "_" + (++cnt) + ".png";
+        // String filepath = "src/main/resources/static/signs/" + filename;
+        // File outputfile = new File(filepath);
+        // ImageIO.write(img, "png", outputfile);
+
+        // System.out.println("=========================================");
+        // System.out.println("=========================================");
+        // System.out.println(filename);
+
+        // String domain = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+        // String retPath = domain + "/signs/" + filename;
+
+        // Map<String, Object> ret = new HashMap<>();
+        // ret.put("signImgSrc", retPath);
+        // return ret;
+    }
+
     // 4. 생성자 및 참여자 서명 완료
     @RequestMapping(value = "/v1/document/{docId}/signer/{signerNo}", method = { RequestMethod.POST })
-    public @ResponseBody PdfResponse saveInput(@PathVariable String docId, @PathVariable String signerNo, @RequestBody ElementsVo elementsVo) {
+    public void saveInput(@PathVariable String docId, @PathVariable String signerNo, @RequestBody ElementsVo elementsVo) {
         List<Element> inputElements = elementsVo.getInputs();
-        PdfResponse pdfRes = docService.saveSignerInput(docId, signerNo, inputElements);
-
-        return pdfRes;
+        docService.saveSignerInput(inputElements);
     }
         
     /**
@@ -169,20 +179,21 @@ public class DocController {
 
 
     // 6. 생성자 pdf 작성 완료
-    /**
-     * 최종 pdf 에 TSA 값을 셋팅, TSA 값을 받아오기 위해서 문서의 hash 값이 필요하다고 함.
-     */
     //@RequestMapping( value="/v1/document/{docId}/signer/{signerId}", method= {RequestMethod.POST} )    
-    @RequestMapping( value="/v1/document/{docId}/signComplete/{signerId}", method= {RequestMethod.POST} )    
+    @RequestMapping( value="/v1/document/{docId}/signComplete/{signerId}", method= {RequestMethod.POST} )
+    //@RequestMapping( value="/v1/document/{docId}/signComplete1/{signerId}", method= {RequestMethod.GET} )
+	//public @ResponseBody String req(@RequestBody Doc doc) {
     public @ResponseBody PdfResponse signComplete(@PathVariable String docId) {
         //log.info("req called");
+        System.out.println("pdf 생성");
         
         // System.out.println(doc.getDocId());
         // List<Signer> signer = doc.getSigners();
         // System.out.println("signer :: " + signer.size());        
         //String docId = "doc1";
 
-        return null;
+        return docService.createPdf(docId);
+        // return null;
     }
     
     // 7. 사용자별 서명결과 조회

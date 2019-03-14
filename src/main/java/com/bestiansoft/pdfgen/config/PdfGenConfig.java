@@ -19,4 +19,7 @@ public class PdfGenConfig {
 
 	@Value("${pdfgen.imgPath}")
 	private String imgPath;
+
+	@Value("${pdfgen.context.path}")
+	private String contextPath;
 }
