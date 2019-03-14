@@ -61,3 +61,65 @@
 2019-03-14 10:10:49.995  INFO 908 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8888 (http) with context path ''
 2019-03-14 10:10:49.995  INFO 908 --- [restartedMain] com.bestiansoft.pdfgen.DemoApplication   : Started DemoApplication in 2.239 seconds (JVM running for 53387.994)
 2019-03-14 10:10:50.008  INFO 908 --- [restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged
+2019-03-14 10:12:12.120  INFO 908 --- [Thread-20] o.s.s.concurrent.ThreadPoolTaskExecutor  : Shutting down ExecutorService 'applicationTaskExecutor'
+2019-03-14 10:12:12.127  INFO 908 --- [Thread-20] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2019-03-14 10:12:12.129  INFO 908 --- [Thread-20] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Shutdown initiated...
+2019-03-14 10:12:12.156  INFO 908 --- [Thread-20] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Shutdown completed.
+2019-03-14 10:12:12.994  INFO 908 --- [restartedMain] com.bestiansoft.pdfgen.DemoApplication   : Starting DemoApplication on DESKTOP-DK605TJ with PID 908 (started by XPS 15 9550 in c:\Users\XPS 15 9550\workspace\pdfgen)
+2019-03-14 10:12:12.995  INFO 908 --- [restartedMain] com.bestiansoft.pdfgen.DemoApplication   : No active profile set, falling back to default profiles: default
+2019-03-14 10:12:13.397  INFO 908 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data repositories in DEFAULT mode.
+2019-03-14 10:12:13.445  INFO 908 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 48ms. Found 4 repository interfaces.
+2019-03-14 10:12:13.509  INFO 908 --- [restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration' of type [org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration$$EnhancerBySpringCGLIB$$e922d25a] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2019-03-14 10:12:13.685  INFO 908 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8888 (http)
+2019-03-14 10:12:13.686  INFO 908 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2019-03-14 10:12:13.687  INFO 908 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.14]
+2019-03-14 10:12:13.713  INFO 908 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2019-03-14 10:12:13.714  INFO 908 --- [restartedMain] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 715 ms
+2019-03-14 10:12:13.766  INFO 908 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Starting...
+2019-03-14 10:12:13.912  INFO 908 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Start completed.
+2019-03-14 10:12:13.927  INFO 908 --- [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [
+	name: default
+	...]
+2019-03-14 10:12:13.954  INFO 908 --- [restartedMain] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL95Dialect
+2019-03-14 10:12:14.100  INFO 908 --- [restartedMain] o.h.e.j.e.i.LobCreatorBuilderImpl        : HHH000421: Disabling contextual LOB creation as hibernate.jdbc.lob.non_contextual_creation is true
+2019-03-14 10:12:14.100  INFO 908 --- [restartedMain] org.hibernate.type.BasicTypeRegistry     : HHH000270: Type registration [java.util.UUID] overrides previous : org.hibernate.type.UUIDBinaryType@21e61789
+2019-03-14 10:12:14.332  INFO 908 --- [restartedMain] o.h.t.schema.internal.SchemaCreatorImpl  : HHH000476: Executing import script 'org.hibernate.tool.schema.internal.exec.ScriptSourceInputNonExistentImpl@6a6d5cea'
+2019-03-14 10:12:14.333  INFO 908 --- [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2019-03-14 10:12:14.339  INFO 908 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2019-03-14 10:12:14.559  INFO 908 --- [restartedMain] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+2019-03-14 10:12:14.564  WARN 908 --- [restartedMain] aWebConfiguration$JpaWebMvcConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2019-03-14 10:12:14.593  INFO 908 --- [restartedMain] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page: ServletContext resource [/index.html]
+2019-03-14 10:12:14.657  INFO 908 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8888 (http) with context path ''
+2019-03-14 10:12:14.658  INFO 908 --- [restartedMain] com.bestiansoft.pdfgen.DemoApplication   : Started DemoApplication in 1.709 seconds (JVM running for 53472.657)
+2019-03-14 10:12:14.669  INFO 908 --- [restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged
+2019-03-14 10:16:12.888  INFO 908 --- [Thread-27] o.s.s.concurrent.ThreadPoolTaskExecutor  : Shutting down ExecutorService 'applicationTaskExecutor'
+2019-03-14 10:16:12.890  INFO 908 --- [Thread-27] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2019-03-14 10:16:12.891  INFO 908 --- [Thread-27] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Shutdown initiated...
+2019-03-14 10:16:12.905  INFO 908 --- [Thread-27] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Shutdown completed.
+2019-03-14 10:16:13.818  INFO 908 --- [restartedMain] com.bestiansoft.pdfgen.DemoApplication   : Starting DemoApplication on DESKTOP-DK605TJ with PID 908 (started by XPS 15 9550 in c:\Users\XPS 15 9550\workspace\pdfgen)
+2019-03-14 10:16:13.818  INFO 908 --- [restartedMain] com.bestiansoft.pdfgen.DemoApplication   : No active profile set, falling back to default profiles: default
+2019-03-14 10:16:14.127  INFO 908 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data repositories in DEFAULT mode.
+2019-03-14 10:16:14.166  INFO 908 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 38ms. Found 4 repository interfaces.
+2019-03-14 10:16:14.222  INFO 908 --- [restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration' of type [org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration$$EnhancerBySpringCGLIB$$e922d25a] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2019-03-14 10:16:14.382  INFO 908 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8888 (http)
+2019-03-14 10:16:14.383  INFO 908 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2019-03-14 10:16:14.383  INFO 908 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.14]
+2019-03-14 10:16:14.407  INFO 908 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2019-03-14 10:16:14.407  INFO 908 --- [restartedMain] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 586 ms
+2019-03-14 10:16:14.449  INFO 908 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-5 - Starting...
+2019-03-14 10:16:14.576  INFO 908 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-5 - Start completed.
+2019-03-14 10:16:14.587  INFO 908 --- [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [
+	name: default
+	...]
+2019-03-14 10:16:14.617  INFO 908 --- [restartedMain] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL95Dialect
+2019-03-14 10:16:14.748  INFO 908 --- [restartedMain] o.h.e.j.e.i.LobCreatorBuilderImpl        : HHH000421: Disabling contextual LOB creation as hibernate.jdbc.lob.non_contextual_creation is true
+2019-03-14 10:16:14.748  INFO 908 --- [restartedMain] org.hibernate.type.BasicTypeRegistry     : HHH000270: Type registration [java.util.UUID] overrides previous : org.hibernate.type.UUIDBinaryType@21e61789
+2019-03-14 10:16:14.940  INFO 908 --- [restartedMain] o.h.t.schema.internal.SchemaCreatorImpl  : HHH000476: Executing import script 'org.hibernate.tool.schema.internal.exec.ScriptSourceInputNonExistentImpl@6a6d5cea'
+2019-03-14 10:16:14.940  INFO 908 --- [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2019-03-14 10:16:14.946  INFO 908 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2019-03-14 10:16:15.134  INFO 908 --- [restartedMain] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+2019-03-14 10:16:15.138  WARN 908 --- [restartedMain] aWebConfiguration$JpaWebMvcConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2019-03-14 10:16:15.159  INFO 908 --- [restartedMain] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page: ServletContext resource [/index.html]
+2019-03-14 10:16:15.218  INFO 908 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8888 (http) with context path ''
+2019-03-14 10:16:15.218  INFO 908 --- [restartedMain] com.bestiansoft.pdfgen.DemoApplication   : Started DemoApplication in 1.437 seconds (JVM running for 53713.217)
+2019-03-14 10:16:15.226  INFO 908 --- [restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged
