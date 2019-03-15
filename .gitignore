@@ -33,3 +33,5 @@ src/main/resources/static/compressed.tracemonkey-pldi-09.pdf
 src/main/resources/static/testsample.pdf
 src/main/webapp/WEB-INF/ajax_test.html
 log/pdfgen.log
+log/
+src/main/resources/application.properties
