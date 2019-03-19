@@ -35,3 +35,5 @@ src/main/webapp/WEB-INF/ajax_test.html
 log/pdfgen.log
 log/
 src/main/resources/application.properties
+src/main/resources/storage/1_signer1.pdf
+src/main/resources/storage/1_signer2.pdf
