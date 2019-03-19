@@ -86,7 +86,11 @@ public class Element {
 	@JsonIgnore
 	public boolean isText() {
 		return "text".equals(inputType);
-    }        
+    }
+    @JsonIgnore
+	public boolean isCheckbox() {
+		return "checkbox".equals(inputType);
+    }
     
     @JsonManagedReference
     @OneToOne(mappedBy="element", cascade=CascadeType.ALL)

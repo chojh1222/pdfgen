@@ -15,13 +15,13 @@ public class Signer {
     static {
         Signer signer1 = new Signer();
         signer1.setEmail("kys@gmail.com");
-        signer1.setSignerNm("kys");
+        signer1.setSignerNm("홍길동");
         signer1.setSignerNo("signer1");
         signer1.setSignerType("owner");
 
         Signer signer2 = new Signer();
         signer2.setEmail("usang@gmail.com");
-        signer2.setSignerNm("usang");
+        signer2.setSignerNm("임꺽정");
         signer2.setSignerNo("signer2");
         signer2.setSignerType("signer");
 

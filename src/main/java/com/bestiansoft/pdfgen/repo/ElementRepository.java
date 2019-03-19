@@ -15,4 +15,7 @@ public interface ElementRepository extends JpaRepository<Element, String> {
 
     @Transactional(readOnly = true)
     List<Element> findByDoc(Doc doc);
+
+    @Transactional(readOnly = true)
+    List<Element> findByDocAndInputType(Doc doc, String inputType);
 }
