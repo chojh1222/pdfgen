@@ -20,11 +20,19 @@ public interface DocService {
 
     public List<Element> getElements(Doc doc, String signerNo);
 
+    public List<Element> getElementsType(Doc doc, String inputType);
+
     public List<Element> getElements(Doc doc);
 
     public PdfResponse saveSignerInput(String docId, String singerNo, List<Element> inputElements);
 
-    public void saveTsa();
+    public PdfResponse signComplete(String docId, String signerId);
+
+    public void saveTsa();    
 
     public void readPdf(HttpServletResponse response, String fileName);
+
+    public void checkbox();
+
+    public void radio();
 }

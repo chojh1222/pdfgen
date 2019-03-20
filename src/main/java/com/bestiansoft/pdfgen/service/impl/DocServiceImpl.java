@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -24,15 +25,29 @@ import com.bestiansoft.pdfgen.repo.ElementRepository;
 import com.bestiansoft.pdfgen.repo.ElementSignRepository;
 import com.bestiansoft.pdfgen.service.DocService;
 
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceCharacteristicsDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
+import org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,6 +84,11 @@ public class DocServiceImpl implements DocService {
 	@Override
 	public List<Element> getElements(Doc doc, String signerNo) {
 		return elementRepository.findByDocAndSignerNo(doc, signerNo);
+	}
+
+	@Override
+	public List<Element> getElementsType(Doc doc, String inputType) {
+		return elementRepository.findByDocAndInputType(doc, inputType);
 	}
 
 	@Override
@@ -134,7 +154,7 @@ public class DocServiceImpl implements DocService {
 
 		if (doc == null) {
 			System.out.println("객체가 없다.");
-			return new PdfResponse(999, "객체가 없다.");
+			return new PdfResponse(404, "객체가 없다.");
 		}
 
 		String saveRoot = pdfGenConfig.getDocHome();	// D:/ktpdf/pdfgen/src/main/resources/storage
@@ -160,14 +180,14 @@ public class DocServiceImpl implements DocService {
 				String pdFont = pdfGenConfig.getFont1();
 				System.out.println("h: " + h + " w : " + w);
 
-				float x_adj = element.getX() * w;
-				float y_adj = element.getY() * h;
-				float w_adj = element.getW() * w;
-				float h_adj = element.getH() * h;
-				// float x_adj = element.getX();
-				// float y_adj = h - element.getY() - 12;
-				// float w_adj = element.getW();
-				// float h_adj = element.getH();
+				// float x_adj = element.getX() * w;
+				// float y_adj = element.getY() * h;
+				// float w_adj = element.getW() * w;
+				// float h_adj = element.getH() * h;
+				float x_adj = element.getX();
+				float y_adj = element.getY();
+				float w_adj = element.getW();
+				float h_adj = element.getH();
 
 
 				// log.info("adj="+x_adj+", " + y_adj + ", " + w_adj + ", " + h_adj);
@@ -185,6 +205,9 @@ public class DocServiceImpl implements DocService {
 					contentStream.drawImage(pdImage, x_adj, y_adj, w_adj, h_adj);
 					*/
 
+					// 문서에 맞게 계산 , 문서높이 - 좌표 - 패드높이
+					y_adj = h - y_adj - h_adj;
+
 					// 서명이미지 저장
 					String signUrl = element.getSignUrl();
 					String inputType = element.getInputType();					
@@ -197,8 +220,12 @@ public class DocServiceImpl implements DocService {
 					}
 
 				} else if (element.isText()) {
+					
+					float fontSize = element.getCharSize();
+					String inputText = element.getAddText();
 
-					// System.out.println("여기까지 오나?" + input.getAddText());
+					// 문서에 맞게 계산, 문서높이 - 좌표 - 폰트사이즈
+					y_adj = h - y_adj - fontSize;
 
 					contentStream.beginText();
 					
@@ -208,14 +235,26 @@ public class DocServiceImpl implements DocService {
 					}else if ("Courier-Bold".equals(fontType)){
 						pdFont = pdfGenConfig.getFont2();
 					}
+					
+					
 
 					InputStream fontStream = new FileInputStream(pdFont);
 					PDType0Font pdfType0Font = PDType0Font.load(document, fontStream);
+
+					float titleWidth = pdfType0Font.getStringWidth(inputText)/1000 * fontSize;
+					System.out.println("titleWidth :: " + titleWidth);
+
+					// 개행?
+					// while(titleWidth > w_adj){
+					// 	String tmp = inputText.substring(0, w_adj);
+					// }
+
 					// contentStream.setFont( getFont(input.getFont()), input.getCharSize());
-					contentStream.setFont(pdfType0Font, element.getCharSize());
+					contentStream.setFont(pdfType0Font, fontSize);
 					contentStream.newLineAtOffset(x_adj, y_adj);
 					//contentStream.moveTextPositionByAmount(x_adj, y_adj);
-					contentStream.showText(element.getAddText()); // 값 셋팅
+					contentStream.showText(inputText); // 값 셋팅
+
 					contentStream.endText();
 				}
 				contentStream.close();
@@ -273,6 +312,68 @@ public class DocServiceImpl implements DocService {
 		return new PdfResponse(200, "저장 완료");
 	}
 
+	/**
+	 * 최종 계약서 저장 처리
+	 */
+	@Transactional
+	@Override
+	public PdfResponse signComplete(String docId, String signerId){
+		
+		Doc doc = docRepository.findById(docId).orElse(null);
+
+		if (doc == null) {
+			System.out.println("객체가 없다.");
+			return new PdfResponse(404, "객체가 없다.");
+		}
+
+
+		// pdf 파일 생성 (tsa 추가?)
+		String saveRoot = pdfGenConfig.getDocHome();	// D:/ktpdf/pdfgen/src/main/resources/storage
+		String oriFilePath = doc.getPdfPath();			// 파일의 절대경로...
+		//String savePdfPath = saveRoot + File.separator + doc.getDocId()+".pdf";	// 저장 전체경로		
+		String savePdfPath = saveRoot + File.separator + doc.getDocId() + "_final.pdf";		// 저장 전체경로
+		String savePdfName = doc.getFileName();		// 별필요없을듯. 우선 파일명을 그대로 저장
+		
+		// 파일을 조회한다.
+		try{
+			PDDocument document = PDDocument.load(new File(oriFilePath));
+			Element elem;
+			
+			// TSA 삽입 시작
+			// TSA 삽입 끝
+
+			document.save(savePdfPath);
+			document.close();
+
+			// pdf 저장 후 DB값 입력
+			doc.setPdfName(savePdfName);
+			doc.setPdfPath(savePdfPath);
+			doc.setPdfRegDt(new Date());			
+			docRepository.save(doc);
+
+
+			// 히스토리값을 저장한다.
+			String pdfName = new Date()+".pdf";			
+			DocHistory docHistory = new DocHistory();			
+			docHistory.setPdfName(pdfName);
+			docHistory.setPdfPath(savePdfPath);
+			docHistory.setRegDt(new Date()); 			
+			docHistory.setSignId(signerId);
+			List<DocHistory> docHistoryList = new ArrayList<DocHistory>();
+			docHistoryList.add(docHistory);
+			doc.setHistory(docHistoryList);
+			
+		} catch (IOException e) {
+			// log.error("PDDocument load fail for fnDoc={} : {}", fnDoc, e.toString());
+			System.out.println("PDDocument load fail for fnDoc={} : {}" + e.toString());
+
+			e.printStackTrace();
+		} finally{
+
+		}
+				
+		return new PdfResponse(200, "저장 완료");
+	}
 
 	private PDType1Font getFont(String font) {
 		PDType1Font pdFont = PDType1Font.TIMES_ROMAN;
@@ -327,5 +428,156 @@ public class DocServiceImpl implements DocService {
 		}
 	}
 
+	@Transactional
+	@Override
+	public void checkbox(){
+		PDDocument document = new PDDocument();
+
+		PDPage page = new PDPage();
+		document.addPage(page);
+
+		PDAcroForm acroForm = new PDAcroForm(document);
+		document.getDocumentCatalog().setAcroForm(acroForm);
+
+
+		COSDictionary normalAppearances = new COSDictionary();
+		PDAppearanceDictionary pdAppearanceDictionary = new PDAppearanceDictionary();
+		pdAppearanceDictionary.setNormalAppearance(new PDAppearanceEntry(normalAppearances));
+		pdAppearanceDictionary.setDownAppearance(new PDAppearanceEntry(normalAppearances));
+
+		// 체크 표시 설정
+		PDAppearanceStream pdAppearanceStream = new PDAppearanceStream(document);
+		pdAppearanceStream.setResources(new PDResources());
+		try (PDPageContentStream pdPageContentStream = new PDPageContentStream(document, pdAppearanceStream))
+		{
+			pdPageContentStream.setFont(PDType1Font.ZAPF_DINGBATS, 14.5f);
+			pdPageContentStream.beginText();
+			pdPageContentStream.newLineAtOffset(3, 4);
+			pdPageContentStream.showText("\u2714");
+			pdPageContentStream.endText();
+		}catch (Exception e) {
+			//TODO: handle exception
+		}
+		pdAppearanceStream.setBBox(new PDRectangle(18, 18));
+		normalAppearances.setItem("Yes", pdAppearanceStream);
+
+		// x 표시 설정
+		pdAppearanceStream = new PDAppearanceStream(document);
+		pdAppearanceStream.setResources(new PDResources());
+		try (PDPageContentStream pdPageContentStream = new PDPageContentStream(document, pdAppearanceStream))
+		{
+			pdPageContentStream.setFont(PDType1Font.ZAPF_DINGBATS, 14.5f);
+			pdPageContentStream.beginText();
+			pdPageContentStream.newLineAtOffset(3, 4);
+			pdPageContentStream.showText("\u2718");		// x 표시... 바꿔야 함.
+			pdPageContentStream.endText();
+		} catch (Exception e) {
+			//TODO: handle exception
+		}
+		pdAppearanceStream.setBBox(new PDRectangle(18, 18));
+		normalAppearances.setItem("Off", pdAppearanceStream);
+
+		PDCheckBox checkBox = new PDCheckBox(acroForm);
+		acroForm.getFields().add(checkBox);
+		checkBox.setPartialName("CheckBoxField");
+		checkBox.setFieldFlags(4);
+
+		List<PDAnnotationWidget> widgets = checkBox.getWidgets();
+		try {
+			for (PDAnnotationWidget pdAnnotationWidget : widgets)
+			{
+				pdAnnotationWidget.setRectangle(new PDRectangle(50, 750, 18, 18));
+				pdAnnotationWidget.setPage(page);
+				page.getAnnotations().add(pdAnnotationWidget);
+
+				pdAnnotationWidget.setAppearance(pdAppearanceDictionary);
+			}
+
+			checkBox.setReadOnly(true);	// 선택불가
+			checkBox.check();	// 체크
+			// checkBox.unCheck();		// X 표시
+
+
+			document.save(new File("D://", "CheckBox.pdf"));
+			document.close();
+		} catch (Exception e) {
+			//TODO: handle exception
+		}
+		
+	}
+
+	@Transactional
+	@Override
+	public void radio(){
+		try {
+			PDDocument document = new PDDocument();
+			PDPage page = new PDPage(PDRectangle.A4);
+	
+			document.addPage(page);
+	
+			PDAcroForm acroForm = new PDAcroForm(document);
+			acroForm.setNeedAppearances(true);
+			acroForm.setXFA(null);
+			document.getDocumentCatalog().setAcroForm(acroForm);
+	
+			PDFont font = PDType1Font.HELVETICA;
+	
+			PDResources res = new PDResources();
+			COSName fontName = res.add(font);
+			acroForm.setDefaultResources(res);
+			acroForm.setDefaultAppearance('/' + fontName.getName() + " 10 Tf 0 g");
+	
+			PDPageContentStream contents = new PDPageContentStream(document, page);
+	
+			List<String> options = Arrays.asList("a", "b", "c");
+			PDRadioButton radioButton = new PDRadioButton(acroForm);
+			radioButton.setPartialName("RadioButtonParent");
+			radioButton.setExportValues(options);
+			radioButton.getCOSObject().setName(COSName.DV, options.get(1));
+	
+			List<PDAnnotationWidget> widgets = new ArrayList<>();
+			for (int i = 0; i < options.size(); i++) {
+	
+				PDAppearanceCharacteristicsDictionary fieldAppearance = new PDAppearanceCharacteristicsDictionary(new COSDictionary());
+				fieldAppearance.setBorderColour(new PDColor(new float[]{0, 0, 0}, PDDeviceRGB.INSTANCE));
+	
+				PDAnnotationWidget widget = new PDAnnotationWidget();
+				widget.setRectangle(new PDRectangle(30, 811 - i * (21), 16, 16));
+				widget.setAppearanceCharacteristics(fieldAppearance);
+	
+				widgets.add(widget);
+				page.getAnnotations().add(widget);
+	
+				// added by Tilman on 13.1.2017, without it Adobe does not set the values properly
+				PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+				COSDictionary dict = new COSDictionary();
+				dict.setItem(COSName.getPDFName("Off"), new COSDictionary());
+				dict.setItem(COSName.getPDFName(options.get(i)), new COSDictionary());
+				PDAppearanceEntry appearanceEntry = new PDAppearanceEntry(dict);
+				appearance.setNormalAppearance(appearanceEntry);
+				widget.setAppearance(appearance);
+	
+	
+				contents.beginText();
+				contents.setFont(font, 10);
+				contents.newLineAtOffset(56, 811 - i * (21) + 4);
+				contents.showText(options.get(i));
+				contents.endText();				
+			}
+			radioButton.setReadOnly(true);	// 선택불가?
+			radioButton.setDefaultValue("a");
+			radioButton.setWidgets(widgets);
+			acroForm.getFields().add(radioButton);
+	
+			contents.close();
+			try(FileOutputStream output = new FileOutputStream("Test.pdf")) {
+				// document.save(output);
+				document.save(new File("D://", "Radio.pdf"));
+			}
+			document.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 }
