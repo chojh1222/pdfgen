@@ -37,3 +37,5 @@ log/
 src/main/resources/application.properties
 src/main/resources/storage/1_signer1.pdf
 src/main/resources/storage/1_signer2.pdf
+src/main/resources/application.properties~3be965fb8dbc547f1a9602cdf5e42274bf74d20e
+.gitignore
