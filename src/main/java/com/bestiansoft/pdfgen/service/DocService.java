@@ -13,7 +13,7 @@ public interface DocService {
 
     public Doc getDoc(String docId);
 
-    public void saveDoc(Doc doc);
+    public PdfResponse saveDoc(Doc doc);
     
     //PdfResponse createPdf(String docId);
     // public PdfResponse createPdf(String docId);

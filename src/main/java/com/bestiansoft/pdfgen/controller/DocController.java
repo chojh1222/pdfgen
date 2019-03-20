@@ -153,7 +153,7 @@ public class DocController {
 
     // 2. 생성자 pdf 작성 완료
     @RequestMapping(value = "/v1/document/{docId}", method = { RequestMethod.POST })
-    public void saveDoc(@PathVariable String docId, @RequestBody Doc doc) {
+    public @ResponseBody PdfResponse saveDoc(@PathVariable String docId, @RequestBody Doc doc) {
         //Doc doc = new Doc();
         String urlFilePath = doc.getFilePath();
         // filePath 가 url로 넘어온다. http://localhost:8888/docPdf/sample.pdf
@@ -165,7 +165,8 @@ public class DocController {
         doc.setFilePath(pdfGenConfig.getDocHome()+ dbFilePath);
         // doc.setElements(doc.getElements());
 
-        docService.saveDoc(doc);
+        PdfResponse pdfRes = docService.saveDoc(doc);
+        return pdfRes;
     }
 
     // signer 의 해당 input box 만 return
