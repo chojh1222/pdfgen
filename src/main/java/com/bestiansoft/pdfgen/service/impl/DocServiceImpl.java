@@ -77,8 +77,11 @@ public class DocServiceImpl implements DocService {
 	}
 
 	@Override
-	public void saveDoc(Doc doc) {
-		docRepository.save(doc);
+	public PdfResponse saveDoc(Doc doc) {
+		Doc doc1 = docRepository.save(doc);
+
+		System.out.println(" doc1 :: " + doc1.getDocId());
+		return new PdfResponse(200, "success");
 	}
 
 	@Override
@@ -166,6 +169,51 @@ public class DocServiceImpl implements DocService {
 		// 파일을 조회한다.
 		try{
 			PDDocument document = PDDocument.load(new File(oriFilePath));
+			
+			// checkbox
+			PDAcroForm acroForm = new PDAcroForm(document);
+			document.getDocumentCatalog().setAcroForm(acroForm);
+			COSDictionary normalAppearances = new COSDictionary();
+			PDAppearanceDictionary pdAppearanceDictionary = new PDAppearanceDictionary();
+			pdAppearanceDictionary.setNormalAppearance(new PDAppearanceEntry(normalAppearances));
+			pdAppearanceDictionary.setDownAppearance(new PDAppearanceEntry(normalAppearances));
+
+			// 체크 표시 설정
+			PDAppearanceStream pdAppearanceStream = new PDAppearanceStream(document);
+			pdAppearanceStream.setResources(new PDResources());
+			try (PDPageContentStream pdPageContentStream = new PDPageContentStream(document, pdAppearanceStream))
+			{
+				pdPageContentStream.setFont(PDType1Font.ZAPF_DINGBATS, 14.5f);
+				pdPageContentStream.beginText();
+				pdPageContentStream.newLineAtOffset(3, 4);
+				pdPageContentStream.showText("\u2713");
+				pdPageContentStream.endText();
+			}catch (Exception e) {
+				//TODO: handle exception
+			}
+			pdAppearanceStream.setBBox(new PDRectangle(18, 18));
+			normalAppearances.setItem("Yes", pdAppearanceStream);
+
+			// x 표시 설정
+			pdAppearanceStream = new PDAppearanceStream(document);
+			pdAppearanceStream.setResources(new PDResources());
+			try (PDPageContentStream pdPageContentStream = new PDPageContentStream(document, pdAppearanceStream))
+			{
+				pdPageContentStream.setFont(PDType1Font.ZAPF_DINGBATS, 14.5f);
+				pdPageContentStream.beginText();
+				pdPageContentStream.newLineAtOffset(3, 4);
+				// pdPageContentStream.showText("\u2718");		// x 표시... 바꿔야 함.
+				pdPageContentStream.showText("");		// 공백 표시
+				pdPageContentStream.endText();
+			} catch (Exception e) {
+				//TODO: handle exception
+			}
+			pdAppearanceStream.setBBox(new PDRectangle(18, 18));
+			normalAppearances.setItem("Off", pdAppearanceStream);
+
+			
+			// checkbox
+			
 			Element elem;
 
 			for (Element element : inputElements) {
@@ -185,19 +233,20 @@ public class DocServiceImpl implements DocService {
 				// float w_adj = element.getW() * w;
 				// float h_adj = element.getH() * h;
 				float x_adj = element.getX();
-				float y_adj = element.getY();
+				float y_adj = element.getY();				
 				float w_adj = element.getW();
 				float h_adj = element.getH();
 
 
 				// log.info("adj="+x_adj+", " + y_adj + ", " + w_adj + ", " + h_adj);
-				System.out.println("adj=" + x_adj + ", " + y_adj + ", " + w_adj + ", " + h_adj);
+				// System.out.println("adj=" + x_adj + ", " + y_adj + ", " + w_adj + ", " + h_adj);
 
 				PDPageContentStream contentStream = new PDPageContentStream(document, page, AppendMode.APPEND, true, true);
 
 				byte[] imageBytes = null;
 
 				if (element.isSign()) {
+					System.out.println("서명이다!!!!!");
 					// DB에 있는 이미지를 읽어와서 넣어야 되는 경우
 					/*
 					String signUrl = pdfGenConfig.getImgPath();
@@ -220,6 +269,7 @@ public class DocServiceImpl implements DocService {
 					}
 
 				} else if (element.isText()) {
+					System.out.println("텍스트 박스 이다!!");
 					
 					float fontSize = element.getCharSize();
 					String inputText = element.getAddText();
@@ -235,8 +285,6 @@ public class DocServiceImpl implements DocService {
 					}else if ("Courier-Bold".equals(fontType)){
 						pdFont = pdfGenConfig.getFont2();
 					}
-					
-					
 
 					InputStream fontStream = new FileInputStream(pdFont);
 					PDType0Font pdfType0Font = PDType0Font.load(document, fontStream);
@@ -256,6 +304,51 @@ public class DocServiceImpl implements DocService {
 					contentStream.showText(inputText); // 값 셋팅
 
 					contentStream.endText();
+				} else if (element.isCheckbox()) {
+					System.out.println("체크박스이다!!");
+
+					System.out.println(" 입력한 값이다 :: " + element.getAddText());					
+					
+					// 문서에 맞게 계산 , 문서높이 - 좌표 - 패드높이
+					// y_adj = h - y_adj - h_adj;
+
+					// 문서에 맞게 계산 , 문서높이 - 좌표 - 패드높이
+					y_adj = h - y_adj - h_adj - (h_adj/2);
+					PDCheckBox checkBox = new PDCheckBox(acroForm);
+					acroForm.getFields().add(checkBox);
+					checkBox.setPartialName(element.getEleId());	// 이름을 각각 틀리게 해야한다.
+					checkBox.setFieldFlags(4);
+
+					List<PDAnnotationWidget> widgets = checkBox.getWidgets();
+					try {
+						for (PDAnnotationWidget pdAnnotationWidget : widgets)
+						{
+							// pdAnnotationWidget.setRectangle(new PDRectangle(50, 750, 18, 18));
+							System.out.println("adj=" + x_adj + ", " + y_adj + ", " + w_adj + ", " + h_adj);
+
+							pdAnnotationWidget.setRectangle(new PDRectangle(x_adj, y_adj, w_adj, h_adj));
+							pdAnnotationWidget.setPage(page);
+							page.getAnnotations().add(pdAnnotationWidget);
+
+							pdAnnotationWidget.setAppearance(pdAppearanceDictionary);
+						}
+
+						checkBox.setReadOnly(true);	// 선택불가
+						checkBox.check();	// 체크
+						// if(element.getAddText().equals("Y")){
+						// 	System.out.println("체크");
+						// 	checkBox.check();	// 체크
+						// }else{
+						// 	System.out.println("체크ㅌㅌㅌㅌ");
+						// 	checkBox.unCheck();		// X 표시
+						// }
+						
+						// document.save(new File("D://", "CheckBox.pdf"));
+						// document.close();
+					} catch (Exception e) {
+						//TODO: handle exception
+					}
+
 				}
 				contentStream.close();
 
