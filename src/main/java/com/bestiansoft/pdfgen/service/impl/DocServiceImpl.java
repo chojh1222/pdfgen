@@ -423,8 +423,20 @@ public class DocServiceImpl implements DocService {
 				}
 				contentStream.close();
 
+				// 메모
+				if(element.getEleId() == null) {
+					element.setDoc(doc);
+					elementRepository.save(element);
+				}
+
 				// 저장처리 
 				elem = elementRepository.findById(element.getEleId()).get();
+
+
+				System.out.println("elem == null ======================================");
+				System.out.println(elem == null);
+				System.out.println(elem.getInputType());
+				System.out.println( elem.getAddText() );
 		
 				// db에서 해당 element id로 저장된 record를 찾을 수 없을 경우 종료
 				if(elem == null)
@@ -434,10 +446,14 @@ public class DocServiceImpl implements DocService {
 				if(elem.getElementSign() == null)
 					elem.setElementSign(new ElementSign());
 
+
 				elem.getElementSign().setEleValue(element.getAddText());
+
+
 				elem.getElementSign().setEleSignValue(imageBytes);
+
 				
-				elementSignRepository.save(elem.getElementSign());	// 값 저장처리
+				// elementSignRepository.save(elem.getElementSign());	// 값 저장처리
 			}
 
 			System.out.println("여기까지 오나? fnSave : " + savePdfPath);

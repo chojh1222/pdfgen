@@ -34,7 +34,7 @@ public class ElementSign {
 
     private String eleValue;
 
-    @Lob
+    // @Lob
     private byte[] eleSignValue;
     
     @Temporal(TemporalType.TIMESTAMP)    
