@@ -23,6 +23,7 @@ import com.bestiansoft.pdfgen.service.DocService;
 import com.bestiansoft.pdfgen.vo.ElementsVo;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -51,6 +52,12 @@ public class DocController {
 
     @Autowired
 	PdfGenConfig pdfGenConfig;
+
+    @Value("${server.host}")    
+    private String serverHost;
+
+    @Value("${server.port}")    
+    private String serverPort;
 
     /**
      * pdf 파일을 읽어 브라우저에 보여줌
@@ -83,35 +90,6 @@ public class DocController {
         
         return ret;
     }
-
-    // /**
-    //  * 1. 생성자용 pdf 조회
-    //  *  - 세션체크 및 권한 체크 등 필요할까? , 파일경로는?
-    //  */
-    // @RequestMapping(value = "/v1/document/{docId}", method = { RequestMethod.GET })
-    // public Map<String, Object> getDoc(HttpSession session, @PathVariable String docId) {
-    //     System.out.println("1.생성자용 pdf 조회 - 임시");
-        
-    //     // 세션체크 ?
-    //     String userId = (String)session.getAttribute("user");
-    //     System.out.println("userId :: " + userId);
-    //     if(userId == null){
-
-    //     }
-    //     // Doc doc = docService.getDoc(docId);
-        
-    //     Map<String, Object> doc = new HashMap<>();
-    //     doc.put("docId", docId);
-    //     doc.put("docName", "테스트문서");
-    //     doc.put("fileName", "계약서1.pdf");
-    //     // doc.put("filePath", "http://localhost:8888" + pdfGenConfig.getContextPath() + "/sample.pdf");
-    //     doc.put("filePath", "null");
-    //     doc.put("userId", "signer1");
-    //     doc.put("signers", Signer.signers); // 생성자, 참여자목록
-    //     doc.put("tmpDocId", "1");
-
-    //     return doc;
-    // }
 
     /**
      * 1. 생성자용 pdf 조회
@@ -170,21 +148,6 @@ public class DocController {
         return pdfRes;
     }
 
-    // signer 의 해당 input box 만 return
-    // // 3. 생성자 및 참여자 pdf 서명 화면
-    // @RequestMapping(value = "/v1/document/{docId}/signer/{signerNo}", method = { RequestMethod.GET })
-    // public Map<String, Object> getDocToSign(@PathVariable String docId, @PathVariable String signerNo) {
-    //     Doc doc = docService.getDoc(docId);
-    //     List<Element> elements = docService.getElements(doc, signerNo);
-
-    //     Map<String, Object> ret = new HashMap<>();
-    //     ret.put("doc", doc.getFilePath());
-    //     ret.put("inputs", elements);
-    //     ret.put("signer", Signer.getSigner(signerNo));
-
-    //     return ret;
-    // }
-
     /**
      * 3. 생성자 및 참여자 pdf 서명 화면
      *  - 세션체크 등 추가...
@@ -235,12 +198,16 @@ public class DocController {
         }else{
             
             // 브라우저에서 열수 있게 url 형식으로 만들어 본다...이게 맞는건지 모르겠네..
-            String urlFilePath = "http://localhost:8888" + pdfGenConfig.getContextPath() + docFilePath.replace(pdfGenConfig.getDocHome(), "");
+            String urlFilePath = serverHost + ":" + serverPort + pdfGenConfig.getContextPath() + docFilePath.replace(pdfGenConfig.getDocHome(), "");
             System.out.println("urlFilePath :: " + urlFilePath);
+
+            Signer signer = new Signer();
+            signer.setSignerNo(signerNo);
 
             ret.put("filePath", urlFilePath);
             ret.put("inputs", elements);
-            ret.put("signer", Signer.getSigner(signerNo));  // 사용자 정보조회 구현 필요    
+            // ret.put("signer", Signer.getSigner(signerNo));
+            ret.put("signer", signer);  // 사용자 정보조회 구현 필요할 수 있음.
         }
 
         return ret;
@@ -282,7 +249,7 @@ public class DocController {
         }else{
             
             // 브라우저에서 열수 있게 url 형식으로 만들어 본다...이게 맞는건지 모르겠네..
-            String urlFilePath = "http://localhost:8888" + pdfGenConfig.getContextPath() + docFilePath.replace(pdfGenConfig.getDocHome(), "");
+            String urlFilePath = serverHost + ":" + serverPort + pdfGenConfig.getContextPath() + docFilePath.replace(pdfGenConfig.getDocHome(), "");
             System.out.println("urlFilePath :: " + urlFilePath);
 
             ret.put("filePath", urlFilePath);
@@ -313,15 +280,36 @@ public class DocController {
     }
     
     // 7. 사용자별 서명결과 조회
-    @RequestMapping( value="/v1/document/{docId}/docSign/{signerId}", method= {RequestMethod.GET} )
+    // @RequestMapping( value="/v1/document/{docId}/docSign/{signerId}", method= {RequestMethod.GET} )
+    @RequestMapping( value="/escDoc/{docId}/docSign/{signerId}", method= {RequestMethod.GET} )
     public Map<String, Object> docSign(@PathVariable String docId, @PathVariable String signerId) {
         
         // 문서 및 사용자 유저로 조회
+        System.out.println("사용자별 서명결과 조회 시작");
+        
+        Doc doc = new Doc();
+        doc.setDocId(docId);        
+        List<Element> elements = docService.getElements(doc, signerId);
+
         Map<String, Object> ret = new HashMap<>();
-        ret.put("docId", "");
-        ret.put("signerId", "");
+        ret.put("docId", docId);
+        ret.put("signerId", signerId);
         ret.put("signYn", "");
-        ret.put("signDt", "");
+        
+
+        for(Element e : elements) {
+            if("sign".equals(e.getInputType())){
+                ElementSign es = e.getElementSign();
+                
+                if(es == null){
+                    ret.put("signYn", "N");
+                    ret.put("signDt", "");
+                }else{
+                    ret.put("signYn", "Y");
+                    ret.put("signDt", e.getRegDt());
+                }
+            }                        
+        }
 
         return ret;
     }

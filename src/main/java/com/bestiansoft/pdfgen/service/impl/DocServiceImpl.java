@@ -272,7 +272,7 @@ public class DocServiceImpl implements DocService {
 					System.out.println("텍스트 박스 이다!!");
 					
 					float fontSize = element.getCharSize();
-					String inputText = element.getAddText();
+					String inputText = element.getAddText() == null ? "" : element.getAddText();
 
 					// 문서에 맞게 계산, 문서높이 - 좌표 - 폰트사이즈
 					y_adj = h - y_adj - fontSize;
@@ -280,10 +280,13 @@ public class DocServiceImpl implements DocService {
 					contentStream.beginText();
 					
 					// 폰트를 읽어온다.
-					if ("Times-Roman".equals(fontType)){
+					if ("본고딕".equals(fontType)){
 						pdFont = pdfGenConfig.getFont1();
-					}else if ("Courier-Bold".equals(fontType)){
+					}else if ("본명조".equals(fontType)){
 						pdFont = pdfGenConfig.getFont2();
+					}else{
+						// 기본폰트로 설정..
+						pdFont = pdfGenConfig.getFont1();
 					}
 
 					InputStream fontStream = new FileInputStream(pdFont);
@@ -310,10 +313,7 @@ public class DocServiceImpl implements DocService {
 					System.out.println(" 입력한 값이다 :: " + element.getAddText());					
 					
 					// 문서에 맞게 계산 , 문서높이 - 좌표 - 패드높이
-					// y_adj = h - y_adj - h_adj;
-
-					// 문서에 맞게 계산 , 문서높이 - 좌표 - 패드높이
-					y_adj = h - y_adj - h_adj - (h_adj/2);
+					y_adj = h - y_adj - h_adj;
 					PDCheckBox checkBox = new PDCheckBox(acroForm);
 					acroForm.getFields().add(checkBox);
 					checkBox.setPartialName(element.getEleId());	// 이름을 각각 틀리게 해야한다.
@@ -334,14 +334,12 @@ public class DocServiceImpl implements DocService {
 						}
 
 						checkBox.setReadOnly(true);	// 선택불가
-						checkBox.check();	// 체크
-						// if(element.getAddText().equals("Y")){
-						// 	System.out.println("체크");
-						// 	checkBox.check();	// 체크
-						// }else{
-						// 	System.out.println("체크ㅌㅌㅌㅌ");
-						// 	checkBox.unCheck();		// X 표시
-						// }
+						
+						if(element.getAddText().equals("Y")){						
+							checkBox.check();	// 체크
+						}else{
+							checkBox.unCheck();		// X 표시
+						}
 						
 						// document.save(new File("D://", "CheckBox.pdf"));
 						// document.close();
@@ -349,6 +347,79 @@ public class DocServiceImpl implements DocService {
 						//TODO: handle exception
 					}
 
+				} else if (element.isRadio()) {
+					System.out.println("라디오 이다!!");
+					System.out.println(" 입력한 값이다 :: " + element.getAddText());	
+
+					// 좌표 문서에 맞게, 
+					y_adj = h - y_adj - h_adj;
+					
+					acroForm.setNeedAppearances(true);
+					acroForm.setXFA(null);
+					// document.getDocumentCatalog().setAcroForm(acroForm);
+			
+					PDFont font = PDType1Font.HELVETICA;
+			
+					PDResources res = new PDResources();
+					COSName fontName = res.add(font);
+					acroForm.setDefaultResources(res);
+					acroForm.setDefaultAppearance('/' + fontName.getName() + " 10 Tf 0 g");
+			
+					// PDPageContentStream contents = new PDPageContentStream(document, page);
+			
+					List<String> options = Arrays.asList("1","2");	// 라디오 구분 명칭으로 표시됨.
+					PDRadioButton radioButton = new PDRadioButton(acroForm);
+					radioButton.setPartialName("RadioButtonParent");
+					radioButton.setExportValues(options);
+					radioButton.getCOSObject().setName(COSName.DV, options.get(1));
+			
+					List<PDAnnotationWidget> widgets = new ArrayList<>();
+					for (int i = 0; i < options.size(); i++) {
+			
+						PDAppearanceCharacteristicsDictionary fieldAppearance = new PDAppearanceCharacteristicsDictionary(new COSDictionary());
+						fieldAppearance.setBorderColour(new PDColor(new float[]{0, 0, 0}, PDDeviceRGB.INSTANCE));
+			
+						PDAnnotationWidget widget = new PDAnnotationWidget();
+						// widget.setRectangle(new PDRectangle(30, 811 - i * (21), 16, 16));						
+						if(i>0){
+							x_adj = x_adj + w_adj - h_adj;
+						}
+						System.out.println("x : " + x_adj + " Y : " + y_adj  + " W : " + w_adj + " H : " +  h_adj);
+						widget.setRectangle(new PDRectangle(x_adj, y_adj, w_adj, h_adj));
+						widget.setAppearanceCharacteristics(fieldAppearance);
+			
+						widgets.add(widget);
+						page.getAnnotations().add(widget);
+			
+						// added by Tilman on 13.1.2017, without it Adobe does not set the values properly
+						PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+						COSDictionary dict = new COSDictionary();
+						dict.setItem(COSName.getPDFName("Off"), new COSDictionary());
+						dict.setItem(COSName.getPDFName(options.get(i)), new COSDictionary());
+						PDAppearanceEntry appearanceEntry = new PDAppearanceEntry(dict);
+						appearance.setNormalAppearance(appearanceEntry);
+						widget.setAppearance(appearance);
+			
+			
+						contentStream.beginText();
+						contentStream.setFont(font, 10);
+						contentStream.newLineAtOffset(56, 811 - i * (21) + 4);
+						// contents.showText(options.get(i));	// 라디오 버튼 뒤에 명칭으로 표시, 이건 필요없을듯.
+						// contentStream.showText(options.get(i));	// 라디오 버튼 뒤에 명칭으로 표시, 이건 필요없을듯.
+						contentStream.endText();				
+					}
+					radioButton.setReadOnly(true);	// 선택불가?
+					// radioButton.setDefaultValue("a");
+					radioButton.setDefaultValue(element.getAddText());
+					radioButton.setWidgets(widgets);
+					acroForm.getFields().add(radioButton);
+			
+					// contents.close();
+					// try(FileOutputStream output = new FileOutputStream("Test.pdf")) {
+					// 	// document.save(output);
+					// 	document.save(new File("D://", "Radio.pdf"));
+					// }
+					// document.close();
 				}
 				contentStream.close();
 
@@ -414,6 +485,7 @@ public class DocServiceImpl implements DocService {
 			System.out.println("PDDocument load fail for fnDoc={} : {}" + e.toString());
 
 			e.printStackTrace();
+			return new PdfResponse(400, "저장 중 오류발생");
 		} finally{
 
 		}	
@@ -652,6 +724,8 @@ public class DocServiceImpl implements DocService {
 	
 				PDAnnotationWidget widget = new PDAnnotationWidget();
 				widget.setRectangle(new PDRectangle(30, 811 - i * (21), 16, 16));
+				// widget.setRectangle(new PDRectangle(0 , 358 , 226 ,20));
+				
 				widget.setAppearanceCharacteristics(fieldAppearance);
 	
 				widgets.add(widget);
@@ -673,15 +747,16 @@ public class DocServiceImpl implements DocService {
 				contents.showText(options.get(i));
 				contents.endText();				
 			}
-			radioButton.setReadOnly(true);	// 선택불가?
-			radioButton.setDefaultValue("a");
+			radioButton.setReadOnly(true);	// 선택불가?			
+			radioButton.setDefaultValue("a");			
+			// radioButton.setValue("a");
 			radioButton.setWidgets(widgets);
 			acroForm.getFields().add(radioButton);
 	
 			contents.close();
 			try(FileOutputStream output = new FileOutputStream("Test.pdf")) {
 				// document.save(output);
-				document.save(new File("D://", "Radio.pdf"));
+				document.save(new File("D://storage//", "Radio.pdf"));
 			}
 			document.close();
 		} catch (IOException e) {

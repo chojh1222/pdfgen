@@ -91,6 +91,10 @@ public class Element {
 	public boolean isCheckbox() {
 		return "checkbox".equals(inputType);
     }
+    @JsonIgnore
+	public boolean isRadio() {
+		return "radio".equals(inputType);
+    }
     
     @JsonManagedReference
     @OneToOne(mappedBy="element", cascade=CascadeType.ALL)
