@@ -1,6 +1,7 @@
 package com.bestiansoft.pdfgen.controller;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -202,7 +203,17 @@ public class DocController {
         }
 
         System.out.println("signerNo : " + signerNo);
-        List<Element> elements = docService.getElements(doc, signerNo);        
+        // List<Element> elements = docService.getElements(doc, signerNo);     
+        
+        List<Element> allElements = docService.getElements(doc);
+        List<Element> elements = new ArrayList<>();
+        for(Element element : allElements) {
+            if("memo".equals(element.getInputType() ) || element.getSignerNo().equals(signerNo)) {
+                elements.add(element);
+            }
+        }
+
+        
 
         for(Element e : elements) {
             ElementSign es = e.getElementSign();
