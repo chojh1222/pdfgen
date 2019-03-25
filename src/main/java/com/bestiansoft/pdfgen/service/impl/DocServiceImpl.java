@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -25,8 +26,10 @@ import com.bestiansoft.pdfgen.repo.ElementRepository;
 import com.bestiansoft.pdfgen.repo.ElementSignRepository;
 import com.bestiansoft.pdfgen.service.DocService;
 
+import org.apache.fontbox.encoding.StandardEncoding;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -34,6 +37,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
@@ -369,49 +373,75 @@ public class DocServiceImpl implements DocService {
 			
 					List<String> options = Arrays.asList("1","2");	// 라디오 구분 명칭으로 표시됨.
 					PDRadioButton radioButton = new PDRadioButton(acroForm);
-					radioButton.setPartialName("RadioButtonParent");
-					radioButton.setExportValues(options);
-					radioButton.getCOSObject().setName(COSName.DV, options.get(1));
-			
+					radioButton.setPartialName("RadioButton");
+					
+					// radioButton.setExportValues(options);
+					// radioButton.getCOSObject().setName(COSName.DV, options.get(1));
+					String selectedValue = element.getAddText();
+
 					List<PDAnnotationWidget> widgets = new ArrayList<>();
 					for (int i = 0; i < options.size(); i++) {
 			
 						PDAppearanceCharacteristicsDictionary fieldAppearance = new PDAppearanceCharacteristicsDictionary(new COSDictionary());
-						fieldAppearance.setBorderColour(new PDColor(new float[]{0, 0, 0}, PDDeviceRGB.INSTANCE));
+						// fieldAppearance.setBorderColour(new PDColor(new float[]{0, 0, 0}, PDDeviceRGB.INSTANCE));	// 라디오 테두리
 			
-						PDAnnotationWidget widget = new PDAnnotationWidget();
-						// widget.setRectangle(new PDRectangle(30, 811 - i * (21), 16, 16));						
+						PDAnnotationWidget widget = new PDAnnotationWidget();					
 						if(i>0){
 							x_adj = x_adj + w_adj - h_adj;
 						}
 						System.out.println("x : " + x_adj + " Y : " + y_adj  + " W : " + w_adj + " H : " +  h_adj);
-						widget.setRectangle(new PDRectangle(x_adj, y_adj, w_adj, h_adj));
+						widget.setRectangle(new PDRectangle(x_adj, y_adj, h_adj, h_adj));						
 						widget.setAppearanceCharacteristics(fieldAppearance);
-			
-						widgets.add(widget);
-						page.getAnnotations().add(widget);
+						widget.setPage(page);
+						widget.getCOSObject().setItem(COSName.PARENT, radioButton);
+						widget.setAnnotationFlags(4);
+						
+						widget.setAppearanceState(options.get(i).equals(selectedValue) ? selectedValue: "Off");
+						widget.setHighlightingMode("I");
 			
 						// added by Tilman on 13.1.2017, without it Adobe does not set the values properly
 						PDAppearanceDictionary appearance = new PDAppearanceDictionary();
 						COSDictionary dict = new COSDictionary();
-						dict.setItem(COSName.getPDFName("Off"), new COSDictionary());
-						dict.setItem(COSName.getPDFName(options.get(i)), new COSDictionary());
+
+						COSStream off = new COSStream();
+						off.setItem(COSName.BBOX, new PDRectangle(0, 0, 16, 16));
+						off.setItem(COSName.RESOURCES, res);
+						OutputStream osOff = off.createOutputStream();
+						osOff.write(("q 0 g /" + fontName.getName() + " 16 Tf BT (O) Tj ET Q").getBytes());
+						osOff.write(("").getBytes());
+						osOff.close();
+						dict.setItem("Off", off);
+
+						COSStream on = new COSStream();
+						on.setItem(COSName.BBOX, new PDRectangle(0, 0, 16, 16));
+						on.setItem(COSName.RESOURCES, res);
+						OutputStream osOn = on.createOutputStream();
+						osOn.write(("q 0 g BT /" + fontName.getName() + " 16 Tf (X) Tj ET Q").getBytes());
+						osOn.write(("").getBytes());
+						osOn.close();
+						dict.setItem(options.get(i), on);
+
+
+						// dict.setItem(COSName.getPDFName("Off"), new COSDictionary());
+						// dict.setItem(COSName.getPDFName(options.get(i)), new COSDictionary());
 						PDAppearanceEntry appearanceEntry = new PDAppearanceEntry(dict);
 						appearance.setNormalAppearance(appearanceEntry);
 						widget.setAppearance(appearance);
+
+						widgets.add(widget);
+						page.getAnnotations().add(widget);
 			
 			
-						contentStream.beginText();
-						contentStream.setFont(font, 10);
-						contentStream.newLineAtOffset(56, 811 - i * (21) + 4);
-						// contents.showText(options.get(i));	// 라디오 버튼 뒤에 명칭으로 표시, 이건 필요없을듯.
-						// contentStream.showText(options.get(i));	// 라디오 버튼 뒤에 명칭으로 표시, 이건 필요없을듯.
-						contentStream.endText();				
+						// contentStream.beginText();
+						// contentStream.setFont(font, 10);
+						// contentStream.newLineAtOffset(56, 811 - i * (21) + 4);
+						// // contents.showText(options.get(i));	// 라디오 버튼 뒤에 명칭으로 표시, 이건 필요없을듯.
+						// // contentStream.showText(options.get(i));	// 라디오 버튼 뒤에 명칭으로 표시, 이건 필요없을듯.
+						// contentStream.endText();
 					}
 					radioButton.setReadOnly(true);	// 선택불가?
-					// radioButton.setDefaultValue("a");
-					radioButton.setDefaultValue(element.getAddText());
-					radioButton.setWidgets(widgets);
+					radioButton.setWidgets(widgets);					
+					radioButton.setValue(selectedValue);
 					acroForm.getFields().add(radioButton);
 			
 					// contents.close();
@@ -691,74 +721,188 @@ public class DocServiceImpl implements DocService {
 	@Override
 	public void radio(){
 		try {
+			
+			String fileName = "D://storage//Test.pdf";
+			String selectedValue = "b";
+			String name = "Radio";
+	
 			PDDocument document = new PDDocument();
 			PDPage page = new PDPage(PDRectangle.A4);
-	
 			document.addPage(page);
 	
 			PDAcroForm acroForm = new PDAcroForm(document);
 			acroForm.setNeedAppearances(true);
-			acroForm.setXFA(null);
 			document.getDocumentCatalog().setAcroForm(acroForm);
 	
+			// PDFont font = PDTrueTypeFont.load(document, new FileInputStream("C:/Windows/Fonts/arial.ttf"), StandardEncoding.INSTANCE);
 			PDFont font = PDType1Font.HELVETICA;
 	
 			PDResources res = new PDResources();
 			COSName fontName = res.add(font);
 			acroForm.setDefaultResources(res);
-			acroForm.setDefaultAppearance('/' + fontName.getName() + " 10 Tf 0 g");
+			acroForm.setDefaultAppearance('/' + fontName.getName() + " 0 Tf 0 g");
 	
 			PDPageContentStream contents = new PDPageContentStream(document, page);
 	
 			List<String> options = Arrays.asList("a", "b", "c");
 			PDRadioButton radioButton = new PDRadioButton(acroForm);
-			radioButton.setPartialName("RadioButtonParent");
-			radioButton.setExportValues(options);
-			radioButton.getCOSObject().setName(COSName.DV, options.get(1));
-	
+			radioButton.setPartialName("RadioButton");
 			List<PDAnnotationWidget> widgets = new ArrayList<>();
-			for (int i = 0; i < options.size(); i++) {
+			for (int i = 0; i < options.size(); i++)
+			{
+				PDRadioButton subRadioButton = new PDRadioButton(acroForm);
+				subRadioButton.setPartialName(name);
+	
+				PDAnnotationWidget widget = subRadioButton.getWidgets().get(0);
 	
 				PDAppearanceCharacteristicsDictionary fieldAppearance = new PDAppearanceCharacteristicsDictionary(new COSDictionary());
-				fieldAppearance.setBorderColour(new PDColor(new float[]{0, 0, 0}, PDDeviceRGB.INSTANCE));
+				// fieldAppearance.setBorderColour(new PDColor(new float[]{0, 0, 0}, PDDeviceRGB.INSTANCE));
 	
-				PDAnnotationWidget widget = new PDAnnotationWidget();
-				widget.setRectangle(new PDRectangle(30, 811 - i * (21), 16, 16));
-				// widget.setRectangle(new PDRectangle(0 , 358 , 226 ,20));
-				
+				widget.setRectangle(new PDRectangle(30, 800 - i * (21), 16, 16));
 				widget.setAppearanceCharacteristics(fieldAppearance);
+				widget.setPage(page);
+				widget.getCOSObject().setItem(COSName.PARENT, radioButton);
+				widget.setAnnotationFlags(4);
+	
+				widget.setAppearanceState(options.get(i).equals(selectedValue) ? selectedValue: "Off");
+				widget.setHighlightingMode("N");
+	
+				PDAppearanceDictionary ap = new PDAppearanceDictionary();
+	
+				COSDictionary aeDict = new COSDictionary();
+	
+				COSStream off = new COSStream();
+				// off.setItem(COSName.BBOX, new PDRectangle(0, 0, 16, 16));
+				// off.setItem(COSName.RESOURCES, res);
+				// OutputStream osOff = off.createOutputStream();
+				// // osOff.write(("q 0 g /" + fontName.getName() + " 16 Tf BT (O) Tj ET Q").getBytes());
+				// // osOff.write(("q 0 g /" + fontName.getName()).getBytes());
+				// osOff.write(("").getBytes());
+				// osOff.close();
+				aeDict.setItem("Off", off);
+	
+				COSStream on = new COSStream();
+				// on.setItem(COSName.BBOX, new PDRectangle(0, 0, 16, 16));
+				// on.setItem(COSName.RESOURCES, res);
+				// OutputStream osOn = on.createOutputStream();
+				// // osOn.write(("q 0 g BT /" + fontName.getName() + " 16 Tf (X) Tj ET Q").getBytes());
+				// osOn.write(("").getBytes());
+				// osOn.close();
+				aeDict.setItem(options.get(i), on);
+	
+				PDAppearanceEntry ae = new PDAppearanceEntry(aeDict);
+				ap.setNormalAppearance(ae);
+				widget.setAppearance(ap);
 	
 				widgets.add(widget);
 				page.getAnnotations().add(widget);
-	
-				// added by Tilman on 13.1.2017, without it Adobe does not set the values properly
-				PDAppearanceDictionary appearance = new PDAppearanceDictionary();
-				COSDictionary dict = new COSDictionary();
-				dict.setItem(COSName.getPDFName("Off"), new COSDictionary());
-				dict.setItem(COSName.getPDFName(options.get(i)), new COSDictionary());
-				PDAppearanceEntry appearanceEntry = new PDAppearanceEntry(dict);
-				appearance.setNormalAppearance(appearanceEntry);
-				widget.setAppearance(appearance);
-	
-	
-				contents.beginText();
-				contents.setFont(font, 10);
-				contents.newLineAtOffset(56, 811 - i * (21) + 4);
-				contents.showText(options.get(i));
-				contents.endText();				
 			}
-			radioButton.setReadOnly(true);	// 선택불가?			
-			radioButton.setDefaultValue("a");			
-			// radioButton.setValue("a");
+			radioButton.setReadOnly(true);	// 선택불가?
 			radioButton.setWidgets(widgets);
+			// System.out.println(radioButton.getOnValues());
+			radioButton.setValue(selectedValue);
 			acroForm.getFields().add(radioButton);
 	
+			// System.out.println(radioButton.getValue());
+	
+			//acroForm.refreshAppearances(); // not implemented
 			contents.close();
-			try(FileOutputStream output = new FileOutputStream("Test.pdf")) {
-				// document.save(output);
-				document.save(new File("D://storage//", "Radio.pdf"));
-			}
+			document.save(new FileOutputStream(fileName));
+	
 			document.close();
+			
+			// PDDocument document = new PDDocument();
+			// PDPage page = new PDPage(PDRectangle.A4);
+	
+			// document.addPage(page);
+	
+			// PDAcroForm acroForm = new PDAcroForm(document);
+			// acroForm.setNeedAppearances(true);
+			// acroForm.setXFA(null);
+			// document.getDocumentCatalog().setAcroForm(acroForm);
+	
+			// PDFont font = PDType1Font.HELVETICA;
+	
+			// PDResources res = new PDResources();
+			// COSName fontName = res.add(font);
+			// acroForm.setDefaultResources(res);
+			// acroForm.setDefaultAppearance('/' + fontName.getName() + " 10 Tf 0 g");
+	
+			// PDPageContentStream contents = new PDPageContentStream(document, page);
+	
+			// List<String> options = Arrays.asList("a", "b");
+			// PDRadioButton radioButton = new PDRadioButton(acroForm);
+			// radioButton.setPartialName("RadioButtonParent");
+			// radioButton.setExportValues(options);
+			// radioButton.getCOSObject().setName(COSName.DV, options.get(1));
+			
+			// String selectedValue = "a";
+
+			// List<PDAnnotationWidget> widgets = new ArrayList<>();
+			// for (int i = 0; i < options.size(); i++) {
+	
+			// 	PDAppearanceCharacteristicsDictionary fieldAppearance = new PDAppearanceCharacteristicsDictionary(new COSDictionary());
+			// 	fieldAppearance.setBorderColour(new PDColor(new float[]{0, 0, 0}, PDDeviceRGB.INSTANCE));
+	
+			// 	PDAnnotationWidget widget = new PDAnnotationWidget();
+			// 	// widget.setRectangle(new PDRectangle(30, 811 - i * (21), 16, 16));
+			// 	widget.setRectangle(new PDRectangle(0, 811 - i * (21), 16, 16));
+			// 	// widget.setRectangle(new PDRectangle(0 , 358 , 226 ,20));
+				
+			// 	widget.setAppearanceState(options.get(i).equals(selectedValue) ? selectedValue: "Off");
+			// 	widget.setAppearanceCharacteristics(fieldAppearance);
+	
+			// 	widgets.add(widget);
+			// 	page.getAnnotations().add(widget);
+	
+			// 	// added by Tilman on 13.1.2017, without it Adobe does not set the values properly
+			// 	PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+			// 	COSDictionary dict = new COSDictionary();
+				
+				
+			// 	COSStream off = new COSStream();
+	        //     off.setItem(COSName.BBOX, new PDRectangle(0, 0, 16, 16));
+	        //     off.setItem(COSName.RESOURCES, res);
+	        //     OutputStream osOff = off.createOutputStream();
+	        //     osOff.write(("q 0 g /" + fontName.getName() + " 16 Tf BT (O) Tj ET Q").getBytes());
+	        //     osOff.write(("").getBytes());
+	        //     osOff.close();
+	        //     dict.setItem("Off", off);
+	 
+	        //     COSStream on = new COSStream();
+	        //     on.setItem(COSName.BBOX, new PDRectangle(0, 0, 16, 16));
+	        //     on.setItem(COSName.RESOURCES, res);
+	        //     OutputStream osOn = on.createOutputStream();
+	        //     osOn.write(("q 0 g BT /" + fontName.getName() + " 16 Tf (X) Tj ET Q").getBytes());
+	        //     osOn.write(("").getBytes());
+	        //     osOn.close();
+	        //     dict.setItem(options.get(i), on);
+
+			// 	// dict.setItem(COSName.getPDFName("Off"), new COSDictionary());
+			// 	// dict.setItem(COSName.getPDFName(options.get(i)), new COSDictionary());
+			// 	PDAppearanceEntry appearanceEntry = new PDAppearanceEntry(dict);
+			// 	appearance.setNormalAppearance(appearanceEntry);
+			// 	widget.setAppearance(appearance);
+	
+	
+			// 	contents.beginText();
+			// 	contents.setFont(font, 10);
+			// 	contents.newLineAtOffset(56, 811 - i * (21) + 4);
+			// 	contents.showText(options.get(i));
+			// 	contents.endText();				
+			// }
+			// radioButton.setReadOnly(true);	// 선택불가?			
+			// // radioButton.setDefaultValue("a");			
+			// radioButton.setWidgets(widgets);
+			// radioButton.setValue("b");
+			// acroForm.getFields().add(radioButton);
+	
+			// contents.close();
+			// try(FileOutputStream output = new FileOutputStream("Test.pdf")) {
+			// 	// document.save(output);
+			// 	document.save(new File("D://storage//", "Radio.pdf"));
+			// }
+			// document.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
