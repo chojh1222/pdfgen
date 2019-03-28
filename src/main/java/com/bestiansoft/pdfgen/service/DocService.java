@@ -2,6 +2,7 @@ package com.bestiansoft.pdfgen.service;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.bestiansoft.pdfgen.domain.PdfResponse;
@@ -30,7 +31,7 @@ public interface DocService {
 
     public void saveTsa();    
 
-    public void readPdf(HttpServletResponse response, String fileName);
+    public void readPdf(HttpServletRequest request, HttpServletResponse response, String fileName);
 
     public void checkbox();
 
