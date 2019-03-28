@@ -25,7 +25,7 @@ public class TestService {
 
     public String getTest() throws SQLException {
         try(
-            Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/test", "root", "1234");
+            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "1234");
             PreparedStatement pstmt = conn.prepareStatement("SELECT 'a' as CNT FROM DUAL");
             ResultSet rs = pstmt.executeQuery();
         ) {
@@ -39,7 +39,7 @@ public class TestService {
 
     public int uploadImage(byte[] img) throws SQLException {
         try(
-            Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/test", "root", "1234");
+            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "1234");
             PreparedStatement pstmt = conn.prepareStatement("insert into ecs_sign_mgt (FILE_STORE) values (?)");
             ) {
             pstmt.setBytes(1, img);
@@ -76,7 +76,7 @@ public class TestService {
 
     public int deleteImage(String imgId) throws SQLException {
         try(
-            Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/test", "root", "1234");
+            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "1234");
             PreparedStatement pstmt = conn.prepareStatement("delete from ecs_sign_mgt where sign_id = ?");
             ) {
             pstmt.setString(1, imgId);
@@ -87,7 +87,7 @@ public class TestService {
 
     public List<Image> getImages() throws SQLException {
         try(
-            Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/test", "root", "1234");
+            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "1234");
             PreparedStatement pstmt = conn.prepareStatement("select SIGN_ID, FILE_STORE from ecs_sign_mgt");
             ResultSet rs = pstmt.executeQuery();
         ) {

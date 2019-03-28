@@ -83,3 +83,7 @@ log/pdfgen.log.2019-03-13.0.gz
 log/pdfgen.log.2019-03-14.0.gz
 log/pdfgen.log.2019-03-22.0.gz
 log/pdfgen.log.2019-03-23.0.gz
+
+src/main/webapp_bak/
+src/main/webapp/
+log/

@@ -46,6 +46,7 @@ public class SignController {
 
     @RequestMapping(value = "/uploadsign", method = { RequestMethod.POST })
     public String uploadsign(String data) throws SQLException, IOException {
+        System.out.println("upload sign!");
         testService.uploadImage(data);
         return "done";
     }
