@@ -22,4 +22,7 @@ public class PdfGenConfig {
 
 	@Value("${pdfgen.context.path}")
 	private String contextPath;
+
+	@Value("${pdfgen.stampType}")
+	private String stampType;
 }

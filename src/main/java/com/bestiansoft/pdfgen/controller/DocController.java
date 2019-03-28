@@ -65,9 +65,9 @@ public class DocController {
      * - 파일아이디를 받아서 조회하는로직이 필요할듯.
      */
     @RequestMapping(value = "/escDoc/pdf/{fileId}", method = { RequestMethod.GET })
-    public void readPdf(HttpServletResponse response, @PathVariable String fileId) throws Exception {
+    public void readPdf(HttpServletRequest request, HttpServletResponse response, @PathVariable String fileId) throws Exception {
         System.out.println("filename : " + fileId);
-        docService.readPdf(response, fileId);
+        docService.readPdf(request, response, fileId);
     }
 
     /**
@@ -176,8 +176,6 @@ public class DocController {
             }
         }
 
-        
-
         for(Element e : elements) {
             ElementSign es = e.getElementSign();
             if(es == null)
@@ -191,7 +189,8 @@ public class DocController {
         }
 
         Map<String, Object> ret = new HashMap<>();
-        String docFilePath = doc.getPdfPath()==null ? doc.getFilePath() : doc.getPdfPath(); // 서명한 pdf를 불러오고 없으면 최초 파일을 불러와        
+        // String docFilePath = doc.getPdfPath()==null ? doc.getFilePath() : doc.getPdfPath(); // 서명한 pdf를 불러오고 없으면 최초 파일을 불러와        
+        String docFilePath = doc.getFilePath(); // 원본에 덮어쓰기에 원본pdf 경로를 읽어온다.
         File filePath = new File(docFilePath);
         if(!filePath.exists()){
             ret.put("filePath", "file not exists");
