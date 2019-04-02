@@ -7,11 +7,38 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Date;
 
+import com.bestiansoft.pdfgen.config.PdfGenConfig;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class FileUtil {
 
+   @Autowired
+   PdfGenConfig pdfGenConfig;
+   
+   @Value("${server.host}")    
+    private String serverHost;
+
+   @Value("${server.port}")    
+   private String serverPort;
+
+    /**
+     * doc id를 받아 url 형식으로 리턴
+     * http://localhost:8888/ecs/docId
+     */
+    public String getFileUrl(String docId){
+        String fileUrl = ""; 	
+
+        if(!docId.equals("")){
+            fileUrl = serverHost + ":" + serverPort + pdfGenConfig.getContextPath() + "/" + docId;
+        }
+        
+        return fileUrl;    
+    }
+    
  //파일을 복사하는 메소드
  public static boolean fileCopy(String inFileName, String outFileName) throws Exception{
   boolean result = false;

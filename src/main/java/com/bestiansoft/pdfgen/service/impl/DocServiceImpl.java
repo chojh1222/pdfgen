@@ -21,8 +21,10 @@ import com.bestiansoft.pdfgen.config.PdfGenConfig;
 import com.bestiansoft.pdfgen.domain.PdfResponse;
 import com.bestiansoft.pdfgen.model.Doc;
 import com.bestiansoft.pdfgen.model.DocHistory;
+import com.bestiansoft.pdfgen.model.Ebox;
 import com.bestiansoft.pdfgen.model.Element;
 import com.bestiansoft.pdfgen.model.ElementSign;
+import com.bestiansoft.pdfgen.repo.BoxRepository;
 import com.bestiansoft.pdfgen.repo.DocRepository;
 import com.bestiansoft.pdfgen.repo.ElementRepository;
 import com.bestiansoft.pdfgen.repo.ElementSignRepository;
@@ -31,6 +33,8 @@ import com.bestiansoft.pdfgen.util.FileUtil;
 import com.bestiansoft.pdfgen.util.StringUtil;
 
 import org.apache.fontbox.encoding.StandardEncoding;
+import org.apache.fontbox.ttf.OTFParser;
+import org.apache.fontbox.ttf.OpenTypeFont;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSInteger;
 import org.apache.pdfbox.cos.COSName;
@@ -71,6 +75,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class DocServiceImpl implements DocService {
 
 	@Autowired
+	BoxRepository boxRepository;
+
+	@Autowired
 	DocRepository docRepository;
 
 	@Autowired
@@ -90,6 +97,12 @@ public class DocServiceImpl implements DocService {
 
 	// 문서생성 seq 번호
 	private static int seq = 0;
+
+	@Override
+	public Ebox getBoxInfo(String boxId) {
+		Ebox ebox = boxRepository.findById(boxId).orElse(null);
+		return ebox;
+	}
 
 	@Override
 	public Doc getDoc(String docId) {
@@ -125,16 +138,21 @@ public class DocServiceImpl implements DocService {
 	 * 추후 세션이나 권한 체크를 할 수 있게 하려고 이렇게 해봄
 	 */
 	@Override
-	public void readPdf(HttpServletRequest request, HttpServletResponse response, String fileName){
+	public void readPdf(HttpServletRequest request, HttpServletResponse response, String docId){
 		
 		FileInputStream fis = null;
         BufferedOutputStream bos = null;
-		
+		String filePath = "";
         try {
+			
+			//docId 를 이용해 경로를 조회
+			Ebox ebox = getBoxInfo(docId);			
+			// String pdfFileName = pdfGenConfig.getDocHome() + File.separator + fileName;
+			if(ebox != null){
+				filePath = ebox.getPdfFilePath();
+			}
 
-			String pdfFileName = pdfGenConfig.getDocHome() + File.separator + fileName;
-
-            File pdfFile = new File(pdfFileName);
+            File pdfFile = new File(filePath);
 
             //클라이언트 브라우져에서 바로 보는 방법(헤더 변경)
 			response.setContentType("application/pdf");			
@@ -349,12 +367,11 @@ public class DocServiceImpl implements DocService {
 						pdFont = pdfGenConfig.getFont1();
 					}
 
-					InputStream fontStream = new FileInputStream(pdFont);
-					PDType0Font pdfType0Font = PDType0Font.load(document, fontStream);
-
-					float titleWidth = pdfType0Font.getStringWidth(inputText)/1000 * fontSize;
-					System.out.println("titleWidth :: " + titleWidth);
-
+					InputStream fontStream = new FileInputStream(pdFont);					
+					PDType0Font pdfType0Font = PDType0Font.load(document, fontStream);					
+					// float titleWidth = pdfType0Font.getStringWidth(inputText)/1000 * fontSize;
+					// System.out.println("titleWidth :: " + titleWidth);
+					// fontStream.close();
 					// 개행?
 					// while(titleWidth > w_adj){
 					// 	String tmp = inputText.substring(0, w_adj);

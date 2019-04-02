@@ -14,12 +14,15 @@ import javax.servlet.http.HttpSession;
 import com.bestiansoft.pdfgen.config.PdfGenConfig;
 import com.bestiansoft.pdfgen.domain.PdfResponse;
 import com.bestiansoft.pdfgen.model.Doc;
+import com.bestiansoft.pdfgen.model.Ebox;
+import com.bestiansoft.pdfgen.model.EboxUser;
 import com.bestiansoft.pdfgen.model.Element;
 import com.bestiansoft.pdfgen.model.ElementSign;
 import com.bestiansoft.pdfgen.model.Signer;
 import com.bestiansoft.pdfgen.repo.ElementRepository;
 import com.bestiansoft.pdfgen.repo.ElementSignRepository;
 import com.bestiansoft.pdfgen.service.DocService;
+import com.bestiansoft.pdfgen.util.FileUtil;
 import com.bestiansoft.pdfgen.vo.ElementsVo;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,15 +62,18 @@ public class DocController {
     @Value("${server.port}")    
     private String serverPort;
 
+    @Autowired
+    FileUtil fileUtil;
+
     /**
      * pdf 파일을 읽어 브라우저에 보여줌
      * - 경로를 어떻게 받아야 하는가.../pdf/test/test.pdf 로 온다면??
      * - 파일아이디를 받아서 조회하는로직이 필요할듯.
      */
-    @RequestMapping(value = "/escDoc/pdf/{fileId}", method = { RequestMethod.GET })
-    public void readPdf(HttpServletRequest request, HttpServletResponse response, @PathVariable String fileId) throws Exception {
-        System.out.println("filename : " + fileId);
-        docService.readPdf(request, response, fileId);
+    @RequestMapping(value = "/escDoc/pdf/{docId}", method = { RequestMethod.GET })
+    public void readPdf(HttpServletRequest request, HttpServletResponse response, @PathVariable String docId) throws Exception {
+        System.out.println("docId : " + docId);
+        docService.readPdf(request, response, docId);
     }
 
     /**
@@ -93,7 +99,7 @@ public class DocController {
 
     /**
      * 1. 생성자용 pdf 조회
-     *  - 세션체크 및 권한 체크 등 필요할까? , 파일경로는?
+     *  - 세션체크 및 권한 체크 등 필요할까? , 파일경로는 DB조회
      */
     @RequestMapping(value = "/v1/document/{docId}/{tmpDocId}/{userId}", method = { RequestMethod.GET })
     public Map<String, Object> getDoc(HttpSession session, @PathVariable String docId, @PathVariable String tmpDocId, @PathVariable String userId) {
@@ -106,16 +112,49 @@ public class DocController {
 
         // }
 
+        System.out.println("tmpDocId :: " + tmpDocId);
+        
+        
         Map<String, Object> doc = new HashMap<>();
+        // 포탈DB에서 기본정보를 조회
+        Ebox ebox = docService.getBoxInfo(docId);
+        if(ebox == null){
+            System.out.println("getEbox is null");
+        }else{
+            System.out.println("getEbox is not null");
+            System.out.println("ebox.getUsers() " + ebox.getUsers().size());
+
+            List<Signer> signers = new ArrayList<>();
+            for(EboxUser eboxUser : ebox.getUsers()){            
+                // System.out.println(eboxUser.getUserNm());                
+
+                Signer signer = new Signer();
+                signer.setSignerNm(eboxUser.getUserNm());
+                signer.setSignerNo(eboxUser.getUser().getUserSeq().toString());
+                signer.setSignerId(eboxUser.getUser().getUserSeq().toString());
+                // user.getUserNm();
+                
+                signers.add(signer);                
+            }
+
+            String urlFilePath = fileUtil.getFileUrl(docId);
+
+            doc.put("docId", ebox.getDocId());
+            doc.put("filePath", urlFilePath);
+            doc.put("signers", signers);
+            // doc.put("signers", Signer.signers); // 생성자, 참여자목록
+        }
         
         // 템플릿 아이디가 있는 경우 조회한다.
-        if(!tmpDocId.equals("NULL")){
+        if(!tmpDocId.equals("null")){
             System.out.println("템플릿 아이디가 있는 경우 조회한다. tmpDocId : " + tmpDocId);
             Doc docObj = new Doc();
             docObj.setDocId(tmpDocId);
             List<Element> elements = docService.getElements(docObj, userId);
-            doc.put("inputs", elements);
-        }        
+            System.out.println("elements " + elements.size());
+            
+            if(elements.size() > 0) doc.put("inputs", elements);
+        }
 
         // 파일아이디? 로 넘어왔다면 조회...파일경로로 넘어온다면 뭐...        
         // doc.put("filePath", "http://localhost:8888" + pdfGenConfig.getContextPath() + "/sample.pdf");
@@ -127,21 +166,21 @@ public class DocController {
         // doc.put("signers", Signer.signers); // 생성자, 참여자목록
         // doc.put("tmpDocId", "1");
 
+        System.out.println("1.생성자용 pdf 조회 끝");
+
         return doc;
     }
 
     // 2. 생성자 pdf 작성 완료
     @RequestMapping(value = "/v1/document/{docId}", method = { RequestMethod.POST })
-    public @ResponseBody PdfResponse saveDoc(@PathVariable String docId, @RequestBody Doc doc) {
-        //Doc doc = new Doc();
-        String urlFilePath = doc.getFilePath();
-        // filePath 가 url로 넘어온다. http://localhost:8888/docPdf/sample.pdf
-        System.out.println("doc.filePath : " + urlFilePath);
-        String dbFilePath = urlFilePath.substring(urlFilePath.indexOf(pdfGenConfig.getContextPath()) + pdfGenConfig.getContextPath().length(), urlFilePath.length() );
-        System.out.println(" dbFilePath : " + dbFilePath);
+    public @ResponseBody PdfResponse saveDoc(@PathVariable String docId, @RequestBody Doc doc) {        
+
+        // 포탈의 첨부파일경로를 디비에 저장
+        Ebox ebox = docService.getBoxInfo(docId);
+        String filePath = ebox.getPdfFilePath();
 
         doc.setDocId(docId);
-        doc.setFilePath(pdfGenConfig.getDocHome()+ dbFilePath);
+        doc.setFilePath(filePath);
         // doc.setElements(doc.getElements());
 
         PdfResponse pdfRes = docService.saveDoc(doc);
@@ -156,6 +195,8 @@ public class DocController {
     public Map<String, Object> getDocToSign(@PathVariable String docId, @PathVariable String signerNo) {
         
         System.out.println("3. 생성자 및 참여자 pdf 서명 화면" );
+        System.out.println("docId : " + docId);
+        System.out.println("signerNo : " + signerNo);
 
         Doc doc = docService.getDoc(docId);
         // List<Element> elements = docService.getElements(doc);
@@ -164,28 +205,34 @@ public class DocController {
         }else{
             System.out.println("b");
         }
-
-        System.out.println("signerNo : " + signerNo);
         // List<Element> elements = docService.getElements(doc, signerNo);     
         
         List<Element> allElements = docService.getElements(doc);
         List<Element> elements = new ArrayList<>();
         for(Element element : allElements) {
-            if("memo".equals(element.getInputType() ) || element.getSignerNo().equals(signerNo)) {
+            System.out.println("1111");
+
+            if("memo".equals(element.getInputType() ) || element.getSignerNo().equals(signerNo)) {            
                 elements.add(element);
             }
         }
 
         for(Element e : elements) {
+            System.out.println("2222");
             ElementSign es = e.getElementSign();
-            if(es == null)
+            if(es == null){
+                continue;                
+            }else{
+                e.setAddText( es.getEleValue() );
+            }
+                
+            if(es.getEleSignValue() == null){
                 continue;
-            e.setAddText( es.getEleValue() );
-            if(es.getEleSignValue() == null)
-                continue;
-            String base64Img = Base64Utils.encodeToString(es.getEleSignValue());
-            base64Img = "data:image/png;base64," + base64Img;
-            e.setSignUrl( base64Img );
+            }else{
+                String base64Img = Base64Utils.encodeToString(es.getEleSignValue());
+                base64Img = "data:image/png;base64," + base64Img;
+                e.setSignUrl( base64Img );
+            }
         }
 
         Map<String, Object> ret = new HashMap<>();
@@ -195,10 +242,7 @@ public class DocController {
         if(!filePath.exists()){
             ret.put("filePath", "file not exists");
         }else{
-            
-            // 브라우저에서 열수 있게 url 형식으로 만들어 본다...이게 맞는건지 모르겠네..
-            String urlFilePath = serverHost + ":" + serverPort + pdfGenConfig.getContextPath() + docFilePath.replace(pdfGenConfig.getDocHome(), "");
-            System.out.println("urlFilePath :: " + urlFilePath);
+            String urlFilePath = fileUtil.getFileUrl(docId);
 
             Signer signer = new Signer();
             signer.setSignerNo(signerNo);
@@ -215,6 +259,11 @@ public class DocController {
     // 4. 생성자 및 참여자 서명 완료
     @RequestMapping(value = "/v1/document/{docId}/signer/{signerNo}", method = { RequestMethod.POST })
     public @ResponseBody PdfResponse saveInput(@PathVariable String docId, @PathVariable String signerNo, @RequestBody ElementsVo elementsVo) {
+
+        System.out.println("4. 생성자 및 참여자 서명 완료" );
+        System.out.println("docId : " + docId);
+        System.out.println("signerNo : " + signerNo);
+
         List<Element> inputElements = elementsVo.getInputs();
         PdfResponse pdfRes = docService.saveSignerInput(docId, signerNo, inputElements);
 
@@ -227,7 +276,12 @@ public class DocController {
      *  - 최종 PDF를 보여줌...메모는??
      */    
     @RequestMapping( value="/v1/document/{docId}/signComplete/{signerNo}", method= {RequestMethod.GET} )
-    public Map<String, Object> contractView(@PathVariable String docId, @PathVariable String signerNo){        
+    public Map<String, Object> contractView(@PathVariable String docId, @PathVariable String signerNo){      
+        
+        System.out.println("5. 생성자가 최종 pdf 확인 화면" );
+        System.out.println("docId : " + docId);
+        System.out.println("signerNo : " + signerNo);
+
         Doc doc = docService.getDoc(docId);
         // List<Element> elements = docService.getElements(doc);
         if(doc != null){
@@ -236,25 +290,26 @@ public class DocController {
             System.out.println("b");
         }
 
-        System.out.println("signerNo : " + signerNo);
         String inputType = "memo";
         List<Element> elements = docService.getElementsType(doc, inputType);    // 메모 전체를 가져온다.
         
         Map<String, Object> ret = new HashMap<>();
-        String docFilePath = doc.getPdfPath()==null ? doc.getFilePath() : doc.getPdfPath(); // 서명한 pdf를 불러오고 없으면 최초 파일을 불러와        
+        // String docFilePath = doc.getPdfPath()==null ? doc.getFilePath() : doc.getPdfPath(); // 서명한 pdf를 불러오고 없으면 최초 파일을 불러와 
+        String docFilePath = doc.getFilePath(); // 원본에 덮어쓰기에 원본pdf 경로를 읽어온다.       
         File filePath = new File(docFilePath);
         if(!filePath.exists()){
             ret.put("filePath", "file not exists");
         }else{
-            
-            // 브라우저에서 열수 있게 url 형식으로 만들어 본다...이게 맞는건지 모르겠네..
-            String urlFilePath = serverHost + ":" + serverPort + pdfGenConfig.getContextPath() + docFilePath.replace(pdfGenConfig.getDocHome(), "");
-            System.out.println("urlFilePath :: " + urlFilePath);
+
+            String urlFilePath = fileUtil.getFileUrl(docId);
+
+            Signer signer = new Signer();
+            signer.setSignerNo(signerNo);
 
             ret.put("filePath", urlFilePath);
             ret.put("inputs", elements);
             // ret.put("signer", Signer.getSigner(signerNo));  // 사용자 정보조회 구현 필요    
-            ret.put("signer", "signer1");  // 사용자 정보조회 구현 필요   
+            ret.put("signer", signer);  // 사용자 정보조회 구현 필요   
         }
 
         return ret;
