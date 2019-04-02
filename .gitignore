@@ -87,3 +87,5 @@ log/pdfgen.log.2019-03-23.0.gz
 src/main/webapp_bak/
 src/main/webapp/
 log/
+src/main/resources/application.properties
+log/pdfgen.log
