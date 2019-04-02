@@ -1,5 +1,8 @@
 package com.bestiansoft.pdfgen.config;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -25,4 +28,27 @@ public class PdfGenConfig {
 
 	@Value("${pdfgen.stampType}")
 	private String stampType;
+
+	private String getPropertieName(String name){
+		String value = "";
+		
+		Properties properties = new Properties();
+		String propFileName = "application.properties";  // properties파일명
+		
+		try {
+			InputStream inputStream = getClass().getClassLoader().getResourceAsStream(propFileName);
+			properties.load(inputStream);
+
+			for(String key : properties.stringPropertyNames()) {
+				if(name.equals(key)){
+					value = properties.getProperty(key);
+					System.out.println(key + " => " + value);
+				}
+			}	
+		} catch (Exception e) {
+			//TODO: handle exception
+		}	
+
+		return value;
+	}
 }

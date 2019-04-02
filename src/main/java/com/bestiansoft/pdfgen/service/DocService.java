@@ -7,11 +7,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.bestiansoft.pdfgen.domain.PdfResponse;
 import com.bestiansoft.pdfgen.model.Doc;
+import com.bestiansoft.pdfgen.model.Ebox;
 import com.bestiansoft.pdfgen.model.Element;
 import com.bestiansoft.pdfgen.model.ElementSign;
 
 public interface DocService {
 
+    public Ebox getBoxInfo(String boxId);
+    
     public Doc getDoc(String docId);
 
     public PdfResponse saveDoc(Doc doc);
@@ -31,7 +34,7 @@ public interface DocService {
 
     public void saveTsa();    
 
-    public void readPdf(HttpServletRequest request, HttpServletResponse response, String fileName);
+    public void readPdf(HttpServletRequest request, HttpServletResponse response, String docId);
 
     public void checkbox();
 

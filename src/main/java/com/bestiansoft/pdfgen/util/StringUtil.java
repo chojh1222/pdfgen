@@ -3,10 +3,12 @@ package com.bestiansoft.pdfgen.util;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+
 import org.springframework.stereotype.Component;
 
 @Component
 public class StringUtil {
+
 
     public String testMD5(String str){
 
@@ -44,5 +46,6 @@ public class StringUtil {
         }    
         return SHA;    
     }
+    
 }
 

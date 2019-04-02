@@ -8,7 +8,10 @@ import javax.persistence.ManyToOne;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import lombok.Data;
+
 // @Entity
+@Data
 public class Signer {
 
     public static List<Signer> signers = new ArrayList<>();
@@ -38,6 +41,7 @@ public class Signer {
     }
 
     @Id
+    private String signerId;
     private String signerNo;
     private String signerNm;
     private String signerType;
