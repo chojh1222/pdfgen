@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+	<meta name="format-detection" content="telephone=no">
+	<title>KT</title>
+	<!-- css -->
+	<link rel="stylesheet" href="/static/assets/css/style.css">
+	<link rel="stylesheet" href="/static/assets/node_modules/owl.carousel/dist/assets/owl.carousel.css"></script>
+	<link rel="stylesheet" href="/static/assets/node_modules/owl.carousel/dist/assets/owl.theme.default.css"></script>
+	<!-- js -->
+	<script src="/static/assets/node_modules/jquery/dist/jquery.min.js"></script>
+	<script src="/static/assets/node_modules/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
+	<script src="/static/assets/node_modules/owl.carousel/dist/owl.carousel.min.js"></script>
+	<script src="/static/assets/js/script.js"></script>
+	<style>
+		.pdf-page {
+			width: 500px;
+			height: 500px;
+			background-color: orange;
+				
+			display: inline-block;
+		}
+		@media screen and (max-width: 1000px) {
+			.service .editor .edit-body .editor-view {
+				/* background-color: beige;
+				min-height: inherit;
+				max-height: 200px;
+				overflow: auto; */
+			}
+		}
+		.test-btn-area {
+			margin: 10px;
+			margin-left: 20px;
+		}
+	</style>
+	<script>
+		function getParameterByName(name, url) {
+			if (!url) url = window.location.href;
+			name = name.replace(/[\[\]]/g, '\\$&');
+			var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+				results = regex.exec(url);
+			if (!results) return null;
+			if (!results[2]) return '';
+			return decodeURIComponent(results[2].replace(/\+/g, ' '));
+		}
+		function openDocumentViewer() {
+			window.docNo = '20190401000000001';
+			window.regId = 'signer1';
+			$( '.canvas-editor' ).load( "http://localhost:8888/document/index.html" );
+		}
+		function openContractViewer(signerNo) {
+			window.docNo = '20190401000000001';
+			window.signerNo = signerNo;
+			$( '.canvas-editor' ).load( "http://localhost:8888/contract/index.html" );
+		}
+		function openCompleteViewer() {
+			window.docNo = '20190401000000001';
+			window.signerNo = 1;
+			$( '.canvas-editor' ).load( "http://localhost:8888/complete/index.html" );
+		}
+		function onSave() {
+			if(todo === 'document') {
+				window.documentContainer.updateDocumentInfo();	
+			}
+			else if(todo === 'contract') {
+				window.contractContainer.saveContractInfo();
+			}
+			else if(todo === 'complete') {
+				window.contractContainer.saveCompleteInfo();	
+			}
+		}
+
+		var todo;
+		$(document).ready(function() {
+			todo = getParameterByName('todo');
+			if(!todo) todo = 'document';
+
+			var signerNo = getParameterByName('signerNo');
+			if(todo === 'document') {
+				openDocumentViewer();
+			} else if(todo === 'contract') {
+				openContractViewer(signerNo);
+			} else if(todo === 'complete') {
+				openCompleteViewer();
+			}
+		})
+	</script>
+</head>
+<body>
+	<div class="gnb-wrap">
+		<div class="gnb">
+			<div class="depth-01-wrap">
+				<h1 class=""><a href="#" class="logo">KT전자서명</a></h1>
+				<ul class="static">
+					<li><a href="#"><span class="icon-cash"></span>요금안내</a></li>
+					<li><a href="#">인증센터</a></li>
+					<li><a href="#" class="login-btn"><img src="/static/assets/images/login.png" alt="로그인"><span>로그인</span></a></li>
+					<!-- <li><a href="" class="user-nickname">(주)보라보라님</a> -->
+					</li>
+				</ul>
+				<ul class="depth-01">
+					<li><a href="#" class="">생성</a></li>
+					<li><a href="#" class="">유통</a></li>
+					<li><a href="#" class="">보관</a></li>
+				</ul>
+			</div>
+			<div class="depth-02-wrap">
+				<div class="depth-02-container">
+					<div class="static">
+						<span class="title">생성</span>
+						<p>생성메뉴에 관한 간단한 설명글이 들어갑니다.</p>
+					</div>
+
+					<ul class="depth-02">
+						<li class="">
+							<ul>
+								<li><a href="#">전자계약</a></li>
+								<li><a href="/RQ_ST_02.html?todo=document">생성자 페이지</a></li>
+								<li><a href="/RQ_ST_02.html?todo=contract&signerNo=1" class="on">서명자 페이지 1</a></li>
+								<li><a href="/RQ_ST_02.html?todo=contract&signerNo=2">서명자 페이지 2</a></li>
+								<li><a href="/RQ_ST_02.html?todo=complete">생성자 확인 페이지</a></li>
+							</ul>
+						</li>
+						<li class="">
+							<ul>
+								<li><a href="#">전자사서함</a></li>
+								<li><a href="#">메뉴명입력01</a></li>
+								<li><a href="#">메뉴명입력01</a></li>
+								<li><a href="#">메뉴명입력01</a></li>
+								<li><a href="#">메뉴명입력01</a></li>
+							</ul>
+						</li>
+						<li>
+							<ul>
+								<li><a href="#">전자문서보관소</a></li>
+								<li><a href="#">메뉴명입력01</a></li>
+								<li><a href="#">메뉴명입력01</a></li>
+								<li><a href="#">메뉴명입력01</a></li>
+								<li><a href="#">메뉴명입력01</a></li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div class="gnb-mobile">
+			<div class="header">
+				<div class="prefix">
+					<a href="#" class="btn icon menu-toggle">
+						<span class="bar"></span>
+						<span class="bar"></span>
+						<span class="bar"></span>
+					</a>
+				</div>
+				<div class="title">
+					<h1 class=""><a href="#" class="logo">KT전자서명</a></h1>
+					<h2></h2>
+				</div>
+				<div class="suffix">
+					<div class="dropdown">
+						<a href="#" class="btn icon login-toggle toggle">
+							<span class="dot"></span>
+							<span class="dot"></span>
+							<span class="dot"></span>
+						</a>
+						<div class="dropdown-menu">
+							<ul>
+								<li><a href="#">로그인</a></li>
+								<li><a href="#">인증센터</a></li>
+								<li><a href="#">요금안내</a></li>
+							</ul>
+						</div>
+
+					</div>
+				</div>
+			</div>
+			<div class="menu-list">
+				<ul>
+					<li><span class="icon-sign"></span><a href="#">전자계약</a></li>
+					<li><span class="icon-box"></span><a href="#">전자사서함</a></li>
+					<li><span class="icon-messege"></span><a href="#">전자 등기</a></li>
+					<li><span class="icon-docu"></span><a href="#">전자문서 보관소</a></li>
+					<li><span class="icon-payment"></span><a href="#">요금안내</a></li>
+					<li><span class="icon-lock"></span><a href="#">인증센터</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="container service">
+		<div class="nav-depth-02">
+			<ul>
+				<li class="on"><a href="#">시작하기</a></li>
+				<li><a href="#">전자계약문서함</a></li>
+				<li><a href="#">전자계약사서함</a></li>
+			</ul>
+		</div>
+		<div class="section">
+			<div class="req-step">
+				<ol>
+					<li><span><em>Step1.</em> 업로드</span></li>
+					<li class="on"><span><em>Step2.</em> 문서편집</span></li>
+					<li><span><em>Step3.</em> 보내기</span></li>
+				</ol>
+			</div>
+		</div>
+		<!-- <div class="test-btn-area">
+			<button onclick="javascript:openDocumentViewer()">생성자 페이지</button>
+			<button onclick="javascript:openContractViewer(1)" style="margin-left: 30px">서명자 페이지 1</button>
+			<button onclick="javascript:openContractViewer(2)">서명자 페이지 2</button>
+			<button onclick="javascript:openCompleteViewer()">생성자 확인 페이지</button>
+		</div> -->
+		<div class="canvas-editor">
+			<!-- <div class="header">
+				<ul class="zoom">
+					<li><a href="#"><span class="icon-zoomin"></span></a></li>
+					<li><a href="#"><span class="icon-zoomout"></span></a></li>
+				</ul>
+			</div>
+			<div class="edit-body">
+				<div class="thumbnail">
+					<ul>
+						<li class="on"><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+						<li><img src="/static/assets/images/sample.jpg" alt=""></li>
+					</ul>
+				</div>
+				<div class="editor-view">
+					<div class="pdf-page">
+						0000000001111111111111122222222222222223333333333333333333444444444444444444555555555555555
+					</div>
+
+				</div>
+				<div class="edit-pallet">
+					<div class="input-select secondary">
+						<select name="" id="">
+							<option value="">참여자 지정</option>
+							<option value="">참여자</option>
+							<option value="">참여자</option>
+							<option value="">참여자</option>
+							<option value="">참여자</option>
+						</select>
+					</div>
+					<ul>
+						<li><a href="#"><span class="icon-insert-txt"></span>텍스트 <span class="opt">입력</span></a></li>
+						<li><a href="#"><span class="icon-stamp"></span>서명 <span class="opt">(Stamp)</span></a></li>
+						<li><a href="#"><span class="icon-checklist"></span>체크항목</a></li>
+						<li><a href="#"><span class="icon-selected-list"></span>선택항목</a></li>
+						<li><a href="#"><span class="icon-memo"></span>메모 <span class="opt">입력</span></a></li>
+					</ul>
+				</div>
+			</div> -->
+		</div>
+		<div class="editor">
+			<div class="notice">
+				<p>※ 추가로 기재된 내용은 원본에 노출 되지 않습니다.</p>
+			</div>
+			<div class="btn-wrap fit-bottom">
+				<a href="" class="btn btn-default primary icon"><span class="icon-sign-white"></span>서명 관리 (도장&middot;직인)</a>
+				<div class="right">
+					<a href="javascript:onSave()" class="btn btn-default third icon icon-right">다음<span class="icon-btn-arrow-white"></span></a>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+	<div class="footer">
+		<div class="wrap">
+			<div class="logo">
+				<a href="" class=""></a>
+			</div>
+			<div class="center">
+				<ul>
+					<li><a href="#">이용약관</a></li>
+					<li><a href="#">개인정보처리방침</a></li>
+					<li><a href="#">고객지원</a></li>
+				</ul>
+				<p>Copyright &copy; 2019 KT Paperless Co., Ltd. All Rights Reserved</p>
+			</div>
+			<div class="dropdown complementary">
+				<a href="#" class="toggle">KT 관련사이트</a>
+				<ul class="dropdown-menu">
+					<li><a href="#">관련사이트</a></li>
+					<li><a href="#">관련사이트</a></li>
+					<li><a href="#">관련사이트</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		// 썸네일 클릭
+		$('.thumbnail li').click(function(){
+			$(this).addClass('on').siblings().removeClass('on');
+		})
+	</script>
+</body>
+</html> 
