@@ -71,6 +71,9 @@ public class Element {
     @Column(name="REG_DT")
     private Date regDt = new Date();
 
+    @Column(name="GBN_CD")
+    private String gbnCd;
+
     // 사용자 입력값
     @Transient
     private String addText;

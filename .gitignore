@@ -89,3 +89,4 @@ src/main/webapp/
 log/
 src/main/resources/application.properties
 log/pdfgen.log
+src/main/webapp/index.html
