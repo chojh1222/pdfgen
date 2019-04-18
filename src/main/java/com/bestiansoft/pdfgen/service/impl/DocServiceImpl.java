@@ -1,5 +1,6 @@
 package com.bestiansoft.pdfgen.service.impl;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -14,6 +15,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -29,12 +31,13 @@ import com.bestiansoft.pdfgen.repo.DocRepository;
 import com.bestiansoft.pdfgen.repo.ElementRepository;
 import com.bestiansoft.pdfgen.repo.ElementSignRepository;
 import com.bestiansoft.pdfgen.service.DocService;
-import com.bestiansoft.pdfgen.util.FileUtil;
-import com.bestiansoft.pdfgen.util.StringUtil;
+import com.bestiansoft.pdfgen.util.Common;
 
 import org.apache.fontbox.encoding.StandardEncoding;
 import org.apache.fontbox.ttf.OTFParser;
 import org.apache.fontbox.ttf.OpenTypeFont;
+import org.apache.fontbox.ttf.TTFParser;
+import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSInteger;
 import org.apache.pdfbox.cos.COSName;
@@ -49,10 +52,12 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.graphics.color.PDOutputIntent;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceCharacteristicsDictionary;
@@ -65,11 +70,16 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.AdobePDFSchema;
 import org.apache.xmpbox.schema.DublinCoreSchema;
+import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
+import org.apache.xmpbox.type.BadFieldValueException;
+import org.apache.xmpbox.xml.XmpSerializationException;
 import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 public class DocServiceImpl implements DocService {
@@ -90,23 +100,25 @@ public class DocServiceImpl implements DocService {
 	PdfGenConfig pdfGenConfig;
 
 	@Autowired
-	FileUtil fileUtil;
+	Common common;
 
-	@Autowired
-	StringUtil stringUtil;
+	@Autowired 
+    private ResourceLoader resourceLoader;
 
 	// 문서생성 seq 번호
 	private static int seq = 0;
 
 	@Override
 	public Ebox getBoxInfo(String boxId) {
-		Ebox ebox = boxRepository.findById(boxId).orElse(null);
+		// Ebox ebox = boxRepository.findById(boxId).orElse(null);
+		Ebox ebox = boxRepository.findByCntrctNo(boxId);		
 		return ebox;
 	}
 
 	@Override
 	public Doc getDoc(String docId) {
-		Doc doc = docRepository.findById(docId).orElse(new Doc());
+		// Doc doc = docRepository.findById(docId).orElse(new Doc());
+		Doc doc = docRepository.findById(docId).orElse(null);
 		return doc;
 	}
 
@@ -150,6 +162,7 @@ public class DocServiceImpl implements DocService {
 			// String pdfFileName = pdfGenConfig.getDocHome() + File.separator + fileName;
 			if(ebox != null){
 				filePath = ebox.getPdfFilePath();
+				// filePath = ebox.getEBoxDoc().getPdfPath();
 			}
 
             File pdfFile = new File(filePath);
@@ -188,7 +201,7 @@ public class DocServiceImpl implements DocService {
 	 */
 	@Transactional
 	@Override
-	public PdfResponse saveSignerInput(String docId, String singerNo, List<Element> inputElements) {
+	public PdfResponse saveSignerInput(String docId, String singerNo, String userHash, List<Element> inputElements) {
 
 		// PDF 파일 저장 처리
 		// docId 로 기초가 되는 파일 조회
@@ -205,19 +218,19 @@ public class DocServiceImpl implements DocService {
 		// String oriFilePath = doc.getPdfPath()==null ? doc.getFilePath() : doc.getPdfPath();				// 최종 pdf 가 없다면 원본에서 조회해와야 한다.
 		String oriFilePath = doc.getFilePath();				// 원본에 덮어쓰기에 원본pdf 경로를 읽어온다.
 		//String savePdfPath = saveRoot + File.separator + doc.getDocId()+".pdf";	// 저장 전체경로
-		String savePdfPath = saveRoot + File.separator + doc.getDocId() + "_" + singerNo + ".pdf";		// 저장 전체경로
-		String savePdfName = doc.getFileName();		// 별필요없을듯. 우선 파일명을 그대로 저장
+		String savePdfPath = saveRoot + File.separator + doc.getDocId() + "_" + singerNo + ".pdf";		// 저장 전체경로		
 		String stampType = pdfGenConfig.getStampType();	// 직접싸인 // 지정이미지
 		
+		PDDocument document = null;
 		// 파일을 조회한다.
 		try{
-			PDDocument document = PDDocument.load(new File(oriFilePath));
+			document = PDDocument.load(new File(oriFilePath));
 			
-			// 서명hash 값을 meta정보로 입력
-			String md5 = stringUtil.testMD5(singerNo);
-
+			// test - 서명hash 값을 meta정보로 입력
+			// String md5 = common.testMD5(singerNo);
+			System.out.println("userHash :: " + userHash);
 			PDDocumentInformation info = document.getDocumentInformation();	// 기존에 입력된 정보를 조회			
-			info.setCustomMetadataValue(singerNo, md5);	// 사용자별 키값을입력
+			info.setCustomMetadataValue(singerNo, userHash);	// 사용자별 키값을입력
 			document.setDocumentInformation(info);
 			
 			System.out.println(info.getCustomMetadataValue("signer1"));
@@ -274,16 +287,7 @@ public class DocServiceImpl implements DocService {
 
 			// 라디오 바깥, 안쪽 테두리 설정
 			String offNString = "";						
-			String onNString = "0 G\n"
-					+ "q\n"
-					+ "  1 0 0 1 8 8 cm\n"
-					+ "  3.5 0 m\n"
-					+ "  3.5 1.9331 1.9331 3.5 0 3.5 c\n"
-					+ "  -1.9331 3.5 -3.5 1.9331 -3.5 0 c\n"
-					+ "  -3.5 -1.9331 -1.9331 -3.5 0 -3.5 c\n"
-					+ "  1.9331 -3.5 3.5 -1.9331 3.5 0 c\n"
-					+ "  f\n"
-					+ "Q";
+			String onNString = common.getOnNString();
 			
 			// 라디오
 			
@@ -301,15 +305,10 @@ public class DocServiceImpl implements DocService {
 				String pdFont = pdfGenConfig.getFont1();
 				System.out.println("h: " + h + " w : " + w);
 
-				// float x_adj = element.getX() * w;
-				// float y_adj = element.getY() * h;
-				// float w_adj = element.getW() * w;
-				// float h_adj = element.getH() * h;
 				float x_adj = element.getX();
 				float y_adj = element.getY();				
 				float w_adj = element.getW();
 				float h_adj = element.getH();
-
 
 				// log.info("adj="+x_adj+", " + y_adj + ", " + w_adj + ", " + h_adj);
 				// System.out.println("adj=" + x_adj + ", " + y_adj + ", " + w_adj + ", " + h_adj);
@@ -327,7 +326,9 @@ public class DocServiceImpl implements DocService {
 					// DB에 있는 이미지를 읽어와서 넣어야 되는 경우
 					if(stampType.equals("img")){
 
-						String stampImgPath = pdfGenConfig.getImgPath();
+						// String stampImgPath = pdfGenConfig.getImgPath();
+						String stampImgPath = resourceLoader.getResource("classpath:"+pdfGenConfig.getImgPath()).getURI().getPath();
+						System.out.println("stampImgPath : " + stampImgPath);
 						PDImageXObject pdImage = PDImageXObject.createFromFile(stampImgPath, document);
 						contentStream.drawImage(pdImage, x_adj, y_adj, w_adj, h_adj);
 
@@ -344,8 +345,8 @@ public class DocServiceImpl implements DocService {
 							contentStream.drawImage(pdImage, x_adj, y_adj, w_adj, h_adj);
 						}
 
-					}					
-
+					}	
+					
 				} else if (element.isText()) {
 					System.out.println("텍스트 박스 이다!!");
 					
@@ -354,36 +355,50 @@ public class DocServiceImpl implements DocService {
 
 					// 문서에 맞게 계산, 문서높이 - 좌표 - 폰트사이즈
 					y_adj = h - y_adj - fontSize;
+					System.out.println("fontType : " + fontType);
+					System.out.println("fontSize : " + fontSize);
+					PDType0Font pdfType0Font = common.getPDType0Font(document, fontType);
+
+					float leading = 1.2f * fontSize;
+					String text = inputText.replaceAll("\\n", " ").replaceAll("\\t", " ");	// 탭과 개행문자 제거					
+					float totalSize = fontSize * pdfType0Font.getStringWidth(text) / 1000;					
+					List<String> lines = new ArrayList<String>();
+
+					// 폰트 한글자의 가로길이
+					float oneFontWidth = fontSize * pdfType0Font.getStringWidth("가") / 1000;
+
+					if(totalSize <= w_adj){
+					 	lines.add(text);
+					}else{						
+						
+						int subLen = Math.round(w_adj / oneFontWidth);
+
+						while(text.length() > 0){
+							
+							if(text.length() > subLen){
+								lines.add(text.substring(0, subLen));
+								text = text.substring(subLen);
+							}else{
+								lines.add(text);
+								text = "";
+							}
+						}						
+					}	
+					
 
 					contentStream.beginText();
-					
-					// 폰트를 읽어온다.
-					if ("본고딕".equals(fontType)){
-						pdFont = pdfGenConfig.getFont1();
-					}else if ("본명조".equals(fontType)){
-						pdFont = pdfGenConfig.getFont2();
-					}else{
-						// 기본폰트로 설정..
-						pdFont = pdfGenConfig.getFont1();
-					}
-
-					InputStream fontStream = new FileInputStream(pdFont);					
-					PDType0Font pdfType0Font = PDType0Font.load(document, fontStream);					
-					// float titleWidth = pdfType0Font.getStringWidth(inputText)/1000 * fontSize;
-					// System.out.println("titleWidth :: " + titleWidth);
-					// fontStream.close();
-					// 개행?
-					// while(titleWidth > w_adj){
-					// 	String tmp = inputText.substring(0, w_adj);
-					// }
-
-					// contentStream.setFont( getFont(input.getFont()), input.getCharSize());
 					contentStream.setFont(pdfType0Font, fontSize);
 					contentStream.newLineAtOffset(x_adj, y_adj);
-					//contentStream.moveTextPositionByAmount(x_adj, y_adj);
-					contentStream.showText(inputText); // 값 셋팅
 
+					for (String line: lines)
+					{
+						contentStream.showText(line);
+						contentStream.newLineAtOffset(0, -leading);
+					}
+										
 					contentStream.endText();
+					// contentStream.close();					
+
 				} else if (element.isCheckbox()) {
 					System.out.println("체크박스이다!!");
 
@@ -461,7 +476,7 @@ public class DocServiceImpl implements DocService {
 
 					// PDPageContentStream contents = new PDPageContentStream(document, page);
 
-					List<String> options = Arrays.asList("1", "2");		// 라디오 버튼중에 체크된 값에만 표시하기 때문에 배열 필요X
+					// List<String> options = Arrays.asList("1", "2");		// 라디오 버튼중에 체크된 값에만 표시하기 때문에 배열 필요X
 					PDRadioButton radioButton = new PDRadioButton(acroForm);
 					radioButton.setPartialName(element.getEleId());
 					// radioButton.setPartialName("RadioButtonParent");
@@ -532,7 +547,6 @@ public class DocServiceImpl implements DocService {
 
 				}
 
-				contentStream.close();
 
 				// 메모
 				if(element.getEleId() == null) {
@@ -566,11 +580,50 @@ public class DocServiceImpl implements DocService {
 				elem.getElementSign().setEleValue(element.getAddText());
 				elem.getElementSign().setEleSignValue(imageBytes);				
 				// elementSignRepository.save(elem.getElementSign());	// 값 저장처리
+				contentStream.close(); // do this before saving!
 			}
 
-			System.out.println("여기까지 오나? fnSave 1 : " + new Date());
+				// // pdf a
+				// PDDocumentCatalog cat = document.getDocumentCatalog();
+				// PDMetadata metadata = new PDMetadata(document);
+				// cat.setMetadata(metadata);
+				// XMPMetadata xmp = XMPMetadata.createXMPMetadata();
+				// try
+				// {
+				// 	PDFAIdentificationSchema pdfaid = xmp.createAndAddPFAIdentificationSchema();
+				// 	pdfaid.setConformance("B");
+				// 	pdfaid.setPart(1);
+				// 	pdfaid.setAboutAsSimple("PDFBox PDFA sample");
+				// 	XmpSerializer serializer = new XmpSerializer();
+				// 	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				// 	serializer.serialize(xmp, baos, false);
+				// 	metadata.importXMPMetadata( baos.toByteArray() );
+				// }
+				// catch(BadFieldValueException badFieldexception)
+				// {
+				// 	// can't happen here, as the provided value is valid
+				// }
+				// // catch(XmpSerializationException xmpException)
+				// // {
+				// //     System.err.println(xmpException.getMessage());
+				// // }
+				// // InputStream colorProfile = DocServiceImpl.class.getResourceAsStream("/org/apache/pdfbox/resources/pdfa/sRGB Color Space Profile.icm");
+				// // InputStream colorProfile = new FileInputStream(pdFont);
+				// InputStream colorProfile = new FileInputStream(resourceLoader.getResource("classpath:sRGB Color Space Profile.icm").getURI().getPath());
+				// // create output intent
+				// PDOutputIntent oi = new PDOutputIntent(document, colorProfile); 
+				// oi.setInfo("sRGB IEC61966-2.1"); 
+				// oi.setOutputCondition("sRGB IEC61966-2.1"); 
+				// oi.setOutputConditionIdentifier("sRGB IEC61966-2.1"); 
+				// oi.setRegistryName("http://www.color.org"); 
+				// cat.addOutputIntent(oi);            
+				// // pdf a
 
+			System.out.println("여기까지 오나? fnSave 1 : " + new Date());			
 			document.save(savePdfPath);
+
+			System.out.println("여기까지 오나? fnSave 1-1 : " + new Date());
+
 			document.close();
 
 			System.out.println("여기까지 오나? fnSave 2 : " + new Date());
@@ -599,21 +652,21 @@ public class DocServiceImpl implements DocService {
 			File saveFile = new File(savePdfPath);
 
 			if(oriFile.exists() && saveFile.exists()){
-				if(fileUtil.fileCopy(savePdfPath, oriFilePath)){
-					fileUtil.fileDelete(savePdfPath);
+				if(common.fileCopy(savePdfPath, oriFilePath)){
+					common.fileDelete(savePdfPath);
 				}
 			}
 
 			System.out.println("여기까지 오나? fnSave 3 : " + new Date());
 
-
+		
 		} catch (IOException e) {
 			// log.error("PDDocument load fail for fnDoc={} : {}", fnDoc, e.toString());
 			System.out.println("PDDocument load fail for fnDoc={} : {}" + e.toString());
 
 			e.printStackTrace();
 			return new PdfResponse(400, "저장 중 오류발생");
-		} catch (Exception e) {
+		} catch (Exception e) {			
 			e.printStackTrace();
 			return new PdfResponse(400, "저장 중 오류발생!!");
 		} finally{
@@ -626,6 +679,7 @@ public class DocServiceImpl implements DocService {
 
 	/**
 	 * 최종 계약서 저장 처리
+	 *  TSA 값 삽입 => 포탈에서 하기로 함
 	 */
 	@Transactional
 	@Override
@@ -1049,6 +1103,168 @@ public class DocServiceImpl implements DocService {
 		}
 	}
 
+	@Transactional
+	@Override
+	public void test(){
+
+		System.out.println("시작");
+	
+
+		PDDocument doc = null;
+        try
+        {
+            doc = new PDDocument();
+            PDPage page = new PDPage();
+            doc.addPage( page );
+            // load the font as this needs to be embedded as part of PDF/A
+			// PDFont font = PDTrueTypeFont.loadTTF(doc, new File("D:/ktpdf/pdfgen/src/main/resources/font/NanumGothic.ttf"));
+			InputStream stream = new FileInputStream("D:/ktpdf/pdfgen/src/main/resources/font/NanumMyeongjo.ttf");
+			PDFont font = PDType0Font.load(doc, stream, false);
+            
+            // create a page with the message where needed
+            PDPageContentStream contentStream = new PDPageContentStream(doc, page);
+            contentStream.beginText();
+            contentStream.setFont( font, 12 );
+            contentStream.moveTextPositionByAmount( 100, 700 );
+			// contentStream.drawString("가나다라마바상자타파아라아러미나어리아더기비자파퍼타쳇바퀴");
+			contentStream.showText("가나다라마바상자타파아라아러미나어리아더기비자파퍼타쳇바퀴"); // 값 셋팅
+            contentStream.endText();
+			contentStream.saveGraphicsState();
+			
+			
+
+			// 이미지
+			String stampImgPath = pdfGenConfig.getImgPath();
+			
+			
+			byte[] imageInByte;        
+			BufferedImage originalImage = ImageIO.read(new File(stampImgPath));
+			ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
+			ImageIO.write(originalImage, "png", baos1);
+			baos1.flush();
+			
+			imageInByte = baos1.toByteArray();
+			// System.out.println(Arrays.toString(imageInByte));
+			
+			baos1.close();
+
+			
+			PDImageXObject pdImage = PDImageXObject.createFromByteArray(doc, imageInByte, null);
+			// PDImageXObject pdImage = PDImageXObject.createFromFile(stampImgPath, doc);
+			contentStream.drawImage(pdImage, 300, 300, 50, 50);
+			contentStream.close();
+			// 이미지
+			
+			
+            PDDocumentCatalog cat = doc.getDocumentCatalog();
+            PDMetadata metadata = new PDMetadata(doc);
+            cat.setMetadata(metadata);
+            XMPMetadata xmp = XMPMetadata.createXMPMetadata();
+            try
+            {
+                PDFAIdentificationSchema pdfaid = xmp.createAndAddPFAIdentificationSchema();
+                pdfaid.setConformance("B");
+                pdfaid.setPart(1);
+                pdfaid.setAboutAsSimple("PDFBox PDFA sample");
+                XmpSerializer serializer = new XmpSerializer();
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                serializer.serialize(xmp, baos, false);
+                metadata.importXMPMetadata( baos.toByteArray() );
+            }
+            catch(BadFieldValueException badFieldexception)
+            {
+				// can't happen here, as the provided value is valid
+				System.out.println("BadFieldValueException : " + badFieldexception.toString());
+
+            }
+            // catch(XmpSerializationException xmpException)
+            // {
+            //     System.err.println(xmpException.getMessage());
+            // }
+			// InputStream colorProfile = CreatePDFA.class.getResourceAsStream("/org/apache/pdfbox/resources/pdfa/sRGB Color Space Profile.icm");
+			InputStream colorProfile = new FileInputStream(resourceLoader.getResource("classpath:sRGB Color Space Profile.icm").getURI().getPath());
+            // create output intent
+            PDOutputIntent oi = new PDOutputIntent(doc, colorProfile); 
+            oi.setInfo("sRGB IEC61966-2.1"); 
+            oi.setOutputCondition("sRGB IEC61966-2.1"); 
+            oi.setOutputConditionIdentifier("sRGB IEC61966-2.1"); 
+            oi.setRegistryName("http://www.color.org"); 
+            cat.addOutputIntent(oi);
+			
+			doc.save(new File("D://storage/pdf-a.pdf"));
+			
+			doc.close();
+
+			System.out.println("저장처리 완료");
+		
+           
+        }catch(Exception e){
+			System.out.println("Exception : " + e.toString());
+		}
+        finally
+        {
+            // if( doc != null )
+            // {
+            //     doc.close();
+            // }
+		}
+		
+
+
+
+
+		// try
+		// {
+		// 	System.out.println("Starting");
+		// 	PDFPreflight pdfPreflight = new PDFPreflight("C:\\input.pdf", null);
+ 
+		// 	// Create a new conversion profile 
+		// 	PDFA_1_B_Conversion profile = new PDFA_1_B_Conversion();
+ 
+		// 	// Set conversion options
+		// 	PDFAConversionOptions options = (PDFAConversionOptions) profile.getConversionOptions();
+		// 	options.setEmbeddedFiles(PDFAConversionOptions.OPTION_DELETE);
+		// 	options.setTransparency(PDFAConversionOptions.OPTION_WARN);
+		// 	options.setUnsupportedAnnotations(PDFAConversionOptions.OPTION_DELETE);
+        //                 options.setSignatureFields(PDFAConversionOptions.OPTION_FLATTEN);
+ 
+ 
+		// 	// Convert the document
+		// 	PreflightResults results = pdfPreflight.convertDocument(profile, null);
+ 
+		// 	// Get conversion results
+		// 	if (results.isSuccessful())
+		// 	{
+		// 		System.out.println("PDF was converted successfully");
+		// 		// Save the PDF/A Document
+		// 		pdfPreflight.saveDocument("C:\\output_pdfa.pdf"); 
+		// 	} 
+		// 	else 
+		// 	{ 
+		// 		System.out.println("PDF was not converted, see report"); 
+		// 		// Add annotations to the document 
+		// 		results.addResultAnnotations(); 
+		// 		// Append report to the document 
+		// 		results.appendPreflightReport(612, 792); 
+		// 		// Save the PDF document with annotations and report
+		// 		pdfPreflight.saveDocument("C:\\conversionreport.pdf"); 
+		// 	}
+		// }
+		// catch(PDFException pdfe)
+		// {
+		// 	System.out.println(pdfe);
+		// }
+		// catch(IOException ioe)
+		// {
+		// 	System.out.println(ioe);
+		// }
+		// catch(Throwable t)
+		// {
+		// 	System.out.println(t);
+		// }
+
+
+	}
 
 	
 	

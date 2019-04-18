@@ -15,20 +15,26 @@ import lombok.Data;
  */
 @Entity
 @Data
-@Table(name="ECS_BOX_USER")
+@Table(name="CT0110D")
 public class EboxUser {
 
-    // @Id
-    // @Column(name = "USER_SEQ", nullable = false)
-    // private Integer userSeq;     // 전자계약 시퀀스
+    // @Column(name = "CNTRCT_NO", nullable = false)
+    // private String docId;     // 계약 번호
 
-    @EmbeddedId
-    private User user;
+    @Id
+    @Column(name = "PARTCPNT_NO", nullable = false)
+    private String userNo;     // 참여자번호, (key)
 
-    @Column(name = "USER_NM")
-    private String userNm;      // 성명    
+    @Column(name = "PARTCPNT_SEQ", nullable = false)
+    private String userSeq;     // 참여자순번
 
-    @ManyToOne    
-    @JoinColumn(name="BOX_ID", insertable = false, updatable = false)
+    @Column(name = "PARTCPNT_NM", nullable = false)
+    private String userNm;      // 성명
+
+    // @EmbeddedId
+    // private User user;
+
+    @ManyToOne
+    @JoinColumn(name="CNTRCT_NO", insertable = false, updatable = false)
     private Ebox box;
 }
