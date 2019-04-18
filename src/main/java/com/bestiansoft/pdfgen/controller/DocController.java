@@ -22,12 +22,13 @@ import com.bestiansoft.pdfgen.model.Signer;
 import com.bestiansoft.pdfgen.repo.ElementRepository;
 import com.bestiansoft.pdfgen.repo.ElementSignRepository;
 import com.bestiansoft.pdfgen.service.DocService;
-import com.bestiansoft.pdfgen.util.FileUtil;
+import com.bestiansoft.pdfgen.util.Common;
 import com.bestiansoft.pdfgen.vo.ElementsVo;
 
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,7 +64,7 @@ public class DocController {
     private String serverPort;
 
     @Autowired
-    FileUtil fileUtil;
+    Common common;
 
     /**
      * pdf 파일을 읽어 브라우저에 보여줌
@@ -112,12 +113,15 @@ public class DocController {
 
         // }
 
+        System.out.println("docId :: " + docId);
         System.out.println("tmpDocId :: " + tmpDocId);
-        
-        
+                
         Map<String, Object> doc = new HashMap<>();
         // 포탈DB에서 기본정보를 조회
         Ebox ebox = docService.getBoxInfo(docId);
+
+        System.out.println("filePath : " + ebox.getPdfFilePath());
+
         if(ebox == null){
             System.out.println("getEbox is null");
         }else{
@@ -126,18 +130,20 @@ public class DocController {
 
             List<Signer> signers = new ArrayList<>();
             for(EboxUser eboxUser : ebox.getUsers()){            
-                // System.out.println(eboxUser.getUserNm());                
-
-                Signer signer = new Signer();
-                signer.setSignerNm(eboxUser.getUserNm());
-                signer.setSignerNo(eboxUser.getUser().getUserSeq().toString());
-                signer.setSignerId(eboxUser.getUser().getUserSeq().toString());
-                // user.getUserNm();
+                System.out.println(eboxUser.getUserSeq() + " : " + eboxUser.getUserNm());
                 
-                signers.add(signer);                
+
+                Signer signer = new Signer();                
+                signer.setSignerNm(eboxUser.getUserNm());
+                signer.setSignerId(eboxUser.getUserNo());   // 참여자키
+                signer.setSignerNo(eboxUser.getUserSeq());  // 참여자순번
+                // user.getUserNm();                
+                signers.add(signer);
             }
 
-            String urlFilePath = fileUtil.getFileUrl(docId);
+            String urlFilePath = common.getFileUrl(docId);
+
+            System.out.println("urlFilePath :: " + urlFilePath);
 
             doc.put("docId", ebox.getDocId());
             doc.put("filePath", urlFilePath);
@@ -156,16 +162,6 @@ public class DocController {
             if(elements.size() > 0) doc.put("inputs", elements);
         }
 
-        // 파일아이디? 로 넘어왔다면 조회...파일경로로 넘어온다면 뭐...        
-        // doc.put("filePath", "http://localhost:8888" + pdfGenConfig.getContextPath() + "/sample.pdf");
-        // doc.put("filePath", "null");
-        // doc.put("fileName", "계약서1.pdf");
-
-        // doc.put("docName", "테스트문서");                
-        // doc.put("userId", "signer1");
-        // doc.put("signers", Signer.signers); // 생성자, 참여자목록
-        // doc.put("tmpDocId", "1");
-
         System.out.println("1.생성자용 pdf 조회 끝");
 
         return doc;
@@ -178,9 +174,14 @@ public class DocController {
         // 포탈의 첨부파일경로를 디비에 저장
         Ebox ebox = docService.getBoxInfo(docId);
         String filePath = ebox.getPdfFilePath();
+        String userNo = ebox.getReqerId();
+        
+        // String filePath = ebox.getEBoxDoc().getPdfPath();
+        // String userNo = ebox.getUserNo();        
 
         doc.setDocId(docId);
         doc.setFilePath(filePath);
+        doc.setUserId(userNo);
         // doc.setElements(doc.getElements());
 
         PdfResponse pdfRes = docService.saveDoc(doc);
@@ -198,61 +199,63 @@ public class DocController {
         System.out.println("docId : " + docId);
         System.out.println("signerNo : " + signerNo);
 
+        Map<String, Object> ret = new HashMap<>();
         Doc doc = docService.getDoc(docId);
         // List<Element> elements = docService.getElements(doc);
         if(doc != null){
             System.out.println("a");
+
+            List<Element> allElements = docService.getElements(doc);
+            List<Element> elements = new ArrayList<>();
+            
+            for(Element element : allElements) {
+                if("memo".equals(element.getInputType() ) || element.getSignerNo().equals(signerNo)) {            
+                    elements.add(element);
+                }
+            }
+
+            for(Element e : elements) {            
+                ElementSign es = e.getElementSign();
+                if(es == null){
+                    continue;                
+                }else{
+                    e.setAddText( es.getEleValue() );
+                }
+                    
+                if(es.getEleSignValue() == null){
+                    continue;
+                }else{
+                    String base64Img = Base64Utils.encodeToString(es.getEleSignValue());
+                    base64Img = "data:image/png;base64," + base64Img;
+                    e.setSignUrl( base64Img );
+                }
+            }
+            
+            // String docFilePath = doc.getPdfPath()==null ? doc.getFilePath() : doc.getPdfPath(); // 서명한 pdf를 불러오고 없으면 최초 파일을 불러와        
+            String docFilePath = doc.getFilePath(); // 원본에 덮어쓰기에 원본pdf 경로를 읽어온다.
+            File filePath = new File(docFilePath);
+            if(!filePath.exists()){
+                ret.put("filePath", "file not exists");
+            }else{
+                String urlFilePath = common.getFileUrl(docId);
+
+                Signer signer = new Signer();
+                signer.setSignerNo(signerNo);
+
+                ret.put("filePath", urlFilePath);
+                ret.put("inputs", elements);
+                // ret.put("signer", Signer.getSigner(signerNo));
+                ret.put("signer", signer);  // 사용자 정보조회 구현 필요할 수 있음.
+            }
+            
         }else{
-            System.out.println("b");
+            System.out.println("객체가 존재하지 않습니다.");
+
+            Signer signer = new Signer();
+            ret.put("signer", signer);  // 사용자 정보조회 구현 필요할 수 있음.
         }
         // List<Element> elements = docService.getElements(doc, signerNo);     
         
-        List<Element> allElements = docService.getElements(doc);
-        List<Element> elements = new ArrayList<>();
-        for(Element element : allElements) {
-            System.out.println("1111");
-
-            if("memo".equals(element.getInputType() ) || element.getSignerNo().equals(signerNo)) {            
-                elements.add(element);
-            }
-        }
-
-        for(Element e : elements) {
-            System.out.println("2222");
-            ElementSign es = e.getElementSign();
-            if(es == null){
-                continue;                
-            }else{
-                e.setAddText( es.getEleValue() );
-            }
-                
-            if(es.getEleSignValue() == null){
-                continue;
-            }else{
-                String base64Img = Base64Utils.encodeToString(es.getEleSignValue());
-                base64Img = "data:image/png;base64," + base64Img;
-                e.setSignUrl( base64Img );
-            }
-        }
-
-        Map<String, Object> ret = new HashMap<>();
-        // String docFilePath = doc.getPdfPath()==null ? doc.getFilePath() : doc.getPdfPath(); // 서명한 pdf를 불러오고 없으면 최초 파일을 불러와        
-        String docFilePath = doc.getFilePath(); // 원본에 덮어쓰기에 원본pdf 경로를 읽어온다.
-        File filePath = new File(docFilePath);
-        if(!filePath.exists()){
-            ret.put("filePath", "file not exists");
-        }else{
-            String urlFilePath = fileUtil.getFileUrl(docId);
-
-            Signer signer = new Signer();
-            signer.setSignerNo(signerNo);
-
-            ret.put("filePath", urlFilePath);
-            ret.put("inputs", elements);
-            // ret.put("signer", Signer.getSigner(signerNo));
-            ret.put("signer", signer);  // 사용자 정보조회 구현 필요할 수 있음.
-        }
-
         return ret;
     }
 
@@ -265,7 +268,8 @@ public class DocController {
         System.out.println("signerNo : " + signerNo);
 
         List<Element> inputElements = elementsVo.getInputs();
-        PdfResponse pdfRes = docService.saveSignerInput(docId, signerNo, inputElements);
+        String userHash = elementsVo.getUserHash();
+        PdfResponse pdfRes = docService.saveSignerInput(docId, signerNo, userHash, inputElements);
 
         return pdfRes;
     }
@@ -301,7 +305,7 @@ public class DocController {
             ret.put("filePath", "file not exists");
         }else{
 
-            String urlFilePath = fileUtil.getFileUrl(docId);
+            String urlFilePath = common.getFileUrl(docId);
 
             Signer signer = new Signer();
             signer.setSignerNo(signerNo);
@@ -316,10 +320,12 @@ public class DocController {
     }
 
 
-    // 6. 생성자 pdf 작성 완료
     /**
-     * 최종 pdf 에 TSA 값을 셋팅, TSA 값을 받아오기 위해서 문서의 hash 값이 필요하다고 함.
-     */    
+     * 6. 생성자 pdf 작성 완료
+     *  - 최종문서에 tsa값을 삽입
+     *   => 포탈에서 진행하기로 함.
+     *  - 처리해야 할게 있나?
+     */
     @RequestMapping( value="/v1/document/{docId}/signComplete/{signerId}", method= {RequestMethod.POST} )    
     public @ResponseBody PdfResponse signComplete(@PathVariable String docId, @PathVariable String signerId) {
         //log.info("req called");
@@ -333,8 +339,11 @@ public class DocController {
         return pdfRes;
     }
     
-    // 7. 사용자별 서명결과 조회
-    // @RequestMapping( value="/v1/document/{docId}/docSign/{signerId}", method= {RequestMethod.GET} )
+    /**
+     * 7. 사용자별 서명결과 조회
+     *  필요없다 - 포탈에서 정보를 가지고 있음.
+     */
+    // 
     @RequestMapping( value="/escDoc/{docId}/docSign/{signerId}", method= {RequestMethod.GET} )
     public Map<String, Object> docSign(@PathVariable String docId, @PathVariable String signerId) {
         
@@ -368,7 +377,9 @@ public class DocController {
         return ret;
     }
 
-    // test TSA 입력
+    /**
+     * test - TSA 입력
+     */
     @RequestMapping( value="/tsa", method= {RequestMethod.GET} )
     public Map<String, Object> docTsa() {
         
@@ -380,7 +391,9 @@ public class DocController {
         return ret;
     }
 
-    // test 체크박스 입력
+    /**
+     * test - 체크박스 입력
+     */
     @RequestMapping( value="/checkbox", method= {RequestMethod.GET} )
     public Map<String, Object> checkbox() {        
         // 
@@ -391,8 +404,9 @@ public class DocController {
         return ret;
     }
 
-
-    // test 체크박스 입력
+    /**
+     * test - 라디오 입력
+     */
     @RequestMapping( value="/radio", method= {RequestMethod.GET} )
     public Map<String, Object> radio() {        
         // 
@@ -401,6 +415,28 @@ public class DocController {
         Map<String, Object> ret = new HashMap<>();
         ret.put("result", "");
         return ret;
+    }
+
+    /**
+     * test - 라디오 입력
+     */
+
+    @Autowired 
+    private ResourceLoader resourceLoader;
+
+    @RequestMapping( value="/test", method= {RequestMethod.GET} )
+    public void test() {
+        // 
+        try{
+            System.out.println(" ================= ");
+            // System.out.println(resourceLoader.getResource("classpath:/font/NotoSansCJKkr-Regular.otf").getURI().getPath());            
+
+            docService.test();
+
+            System.out.println(" ================= ");
+        }catch(Exception e){
+
+        }
     }
 
 
