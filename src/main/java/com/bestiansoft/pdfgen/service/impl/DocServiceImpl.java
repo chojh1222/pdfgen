@@ -541,6 +541,8 @@ public class DocServiceImpl implements DocService {
 				}
 
 				// 저장처리 
+				Integer charSize = element.getCharSize();
+				String font = element.getFont();
 				elem = elementRepository.findById(element.getEleId()).get();
 
 
@@ -552,6 +554,10 @@ public class DocServiceImpl implements DocService {
 				// db에서 해당 element id로 저장된 record를 찾을 수 없을 경우 종료
 				if(elem == null)
 					return null;
+
+				// 폰트 업데이트
+				elem.setCharSize(charSize);
+				elem.setFont(font);
 
 				// 이전에 해당 element에 입력된 값이 없다면 새로입력
 				if(elem.getElementSign() == null)
