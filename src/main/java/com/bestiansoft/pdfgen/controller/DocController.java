@@ -296,6 +296,16 @@ public class DocController {
 
         String inputType = "memo";
         List<Element> elements = docService.getElementsType(doc, inputType);    // 메모 전체를 가져온다.
+
+        for(Element e : elements) {
+            System.out.println("2222");
+            ElementSign es = e.getElementSign();
+            if(es == null){
+                continue;                
+            }else{
+                e.setAddText( es.getEleValue() );
+            }
+        }
         
         Map<String, Object> ret = new HashMap<>();
         // String docFilePath = doc.getPdfPath()==null ? doc.getFilePath() : doc.getPdfPath(); // 서명한 pdf를 불러오고 없으면 최초 파일을 불러와 
