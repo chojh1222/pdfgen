@@ -4,23 +4,26 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+// import javax.persistence.CascadeType;
+// import javax.persistence.Entity;
+// import javax.persistence.Id;
+// import javax.persistence.OneToMany;
+// import javax.persistence.Table;
+// import javax.persistence.Temporal;
+// import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import org.apache.ibatis.type.Alias;
+
 import lombok.Data;
 
-@Entity
+// @Entity
 @Data
-@Table(name="ECS_DOC_MGT")
+@Alias("doc")
+// @Table(name="ECS_DOC_MGT")
 public class Doc {
-    @Id
+    // @Id
     private String docId;
     
     private String userId;
@@ -31,21 +34,21 @@ public class Doc {
 
     private String filePath;
     
-    @Temporal(TemporalType.TIMESTAMP)
+    // @Temporal(TemporalType.TIMESTAMP)
     private Date regDt = new Date();
 
     private String pdfName;
     private String pdfPath;
     private String pdfSignId;
     
-    @Temporal(TemporalType.TIMESTAMP)
+    // @Temporal(TemporalType.TIMESTAMP)
     private Date pdfRegDt;
 
     // @JsonManagedReference
     // @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER)
     // private List<Signer> signers;
     @JsonManagedReference
-    @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL)
+    // @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL)
     private List<Element> elements;
 
     public void addElement(Element element) {
@@ -66,6 +69,6 @@ public class Doc {
     }
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL)
+    // @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL)
     private List<DocHistory> history;
 }

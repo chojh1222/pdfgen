@@ -1,14 +1,14 @@
 package com.bestiansoft.pdfgen.model;
 
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+// import javax.persistence.Id;
+// import javax.persistence.ManyToOne;
 
 // @Entity
 public class SignerInput {
-    @Id 
+    // @Id 
     private String id;
 
-    @ManyToOne
+    // @ManyToOne
     private Element elem;
 
     private String textInput;

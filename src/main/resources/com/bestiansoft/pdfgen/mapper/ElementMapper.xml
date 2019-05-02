@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bestiansoft.pdfgen.mapper.ElementMapper">
+
+    <select id="findByDocAndSignerNo" resultMap="elementResultMap">
+        <include refid="selectElement" />
+        where
+            e.doc_id = #{doc.docId}
+            and sign_id = #{signerNo}
+    </select>
+
+    <select id="findByDocAndInputType" resultType="com.bestiansoft.pdfgen.model.Element">
+        <include refid="selectElement" />
+        where
+            e.doc_id = #{doc.docId}
+            and ele_type = #{inputType}
+    </select>
+
+    <resultMap id="elementResultMap" type="com.bestiansoft.pdfgen.model.Element" >
+        <id property="eleId" column="ele_id" />
+        <result property="charSize" column="ele_font_size" />
+        <result property="eleOrd" column="ele_ord" />
+        <result property="font" column="ele_font_name" />
+        <result property="gbnCd" column="gbn_cd" />
+        <result property="h" column="ele_height" />
+        <result property="inputType" column="ele_type" />
+        <result property="page" column="page" />
+        <result property="regDt" column="reg_dt" />
+        <result property="signerNo" column="sign_id" />
+        <result property="w" column="ele_width" />
+        <result property="x" column="ele_pos_x" />
+        <result property="y" column="ele_pos_y" />
+        
+        <association property="doc" column="doc_id" select="com.bestiansoft.pdfgen.mapper.DocMapper.getDoc" />
+        <association property="elementSign" resultMap="elementSignResultMap" />
+    </resultMap>
+
+    <resultMap id="elementSignResultMap" type="com.bestiansoft.pdfgen.model.ElementSign" >
+        <id property="id" column="ele_id" />
+        <result property="eleSignValue" column="ele_sign_value" />
+        <result property="eleValue" column="ele_value" />
+        <result property="regDt" column="es_reg_dt" />
+    </resultMap>
+
+
+
+    <select id="findByDoc" resultMap="elementResultMap">
+        <include refid="selectElement" />
+        where
+            e.doc_id = #{docId}
+    </select>
+
+    <insert id="insertElement">
+        <selectKey keyProperty="eleId" resultType="String" order="BEFORE">
+            select uuid_generate_v4()
+        </selectKey>
+        insert
+        into
+            ecs_ele_mgt
+            (ele_font_size, doc_id, ele_ord, ele_font_name, gbn_cd, ele_height, ele_type, page, reg_dt, sign_id, ele_width, ele_pos_x, ele_pos_y, ele_id)
+        values
+            (#{charSize}, #{doc.docId}, #{eleOrd}, #{font}, #{gbnCd}, #{h}, #{inputType}, #{page}, #{regDt}, #{signerNo}, #{w}, #{x}, #{y}, #{eleId})
+    </insert>
+
+    <update id="updateElement">
+        update
+            ecs_ele_mgt
+        set
+            ele_font_size = #{charSize},
+            doc_id = #{doc.docId},
+            ele_ord = #{eleOrd},
+            ele_font_name = #{font},
+            gbn_cd = #{gbnCd},
+            ele_height = #{h},
+            ele_type = #{inputType},
+            page = #{page},
+            reg_dt = #{regDt},
+            sign_id = #{signerNo},
+            ele_width = #{w},
+            ele_pos_x = #{x},
+            ele_pos_y = #{y}
+        where
+            ele_id = #{eleId}
+    </update>
+
+    <insert id="insertElementSign">
+        insert
+        into
+            ecs_ele_sign_mgt
+            (ele_sign_value, ele_value, reg_dt, ele_id)
+        values
+            (#{eleSignValue}, #{eleValue}, #{regDt}, #{element.eleId})
+    </insert>
+
+    <sql id="selectElement">
+        select
+            e.ele_id,
+            e.ele_font_size,
+            e.doc_id,
+            e.ele_ord,
+            e.ele_font_name,
+            e.gbn_cd,
+            e.ele_height,
+            e.ele_type,
+            e.page,
+            e.reg_dt,
+            e.sign_id,
+            e.ele_width,
+            e.ele_pos_x,
+            e.ele_pos_y,
+            es.ele_value,
+            es.ele_sign_value,
+            es.reg_dt as es_reg_dt
+        from
+            ecs_ele_mgt e
+        left outer join
+            ecs_ele_sign_mgt es
+                on e.ele_id = es.ele_id
+    </sql>
+
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bestiansoft.pdfgen.mapper.DocMapper">
+
+    <resultMap id="docResultMap" type="com.bestiansoft.pdfgen.model.Doc" >
+        <id property="docId" column="doc_id" />
+        <result property="docName" column="doc_name" />
+        <result property="fileName" column="file_name" />
+        <result property="filePath" column="file_path" />
+        <result property="pdfName" column="pdf_name" />
+        <result property="pdfPath" column="pdf_path" />
+        <result property="pdfRegDt" column="pdf_reg_dt" />
+        <result property="pdfSignId" column="pdf_sign_id" />
+        <result property="regDt" column="reg_dt" />
+        <result property="userId" column="user_id" />
+    </resultMap>
+
+    <select id="getDoc" resultMap="docResultMap">
+        select
+            doc_id,
+            doc_name,
+            file_name,
+            file_path,
+            pdf_name,
+            pdf_path,
+            pdf_reg_dt,
+            pdf_sign_id,
+            reg_dt,
+            user_id
+        from
+            ecs_doc_mgt 
+        where
+            doc_id = #{docId}
+    </select>
+
+    <insert id="insertDoc">
+        insert
+        into
+            ecs_doc_mgt
+            (doc_name, file_name, file_path, pdf_name, pdf_path, pdf_reg_dt, pdf_sign_id, reg_dt, user_id, doc_id)
+        values
+            (#{docName}, #{fileName}, #{filePath}, #{pdfName}, #{pdfPath}, #{pdfRegDt}, #{pdfSignId}, #{regDt}, #{userId}, #{docId})
+    </insert>
+
+    <update id="updateDoc">
+        update
+            ecs_doc_mgt
+        set
+            doc_name = #{docName},
+            file_name = #{fileName},
+            file_path = #{filePath},
+            pdf_name = #{pdfName},
+            pdf_path = #{pdfPath},
+            pdf_reg_dt = #{pdfRegDt},
+            pdf_sign_id = #{pdfSignId},
+            reg_dt = #{regDt},
+            user_id = #{userId}
+        where
+            doc_id = #{docId}
+    </update>
+
+</mapper>

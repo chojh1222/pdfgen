@@ -19,8 +19,6 @@ import com.bestiansoft.pdfgen.model.EboxUser;
 import com.bestiansoft.pdfgen.model.Element;
 import com.bestiansoft.pdfgen.model.ElementSign;
 import com.bestiansoft.pdfgen.model.Signer;
-import com.bestiansoft.pdfgen.repo.ElementRepository;
-import com.bestiansoft.pdfgen.repo.ElementSignRepository;
 import com.bestiansoft.pdfgen.service.DocService;
 import com.bestiansoft.pdfgen.util.Common;
 import com.bestiansoft.pdfgen.vo.ElementsVo;
@@ -47,12 +45,6 @@ public class DocController {
 
     @Autowired
     DocService docService;
-
-    @Autowired
-    ElementRepository elementRepository;
-
-    @Autowired
-    ElementSignRepository elementSignRepository;
 
     @Autowired
 	PdfGenConfig pdfGenConfig;
@@ -207,7 +199,7 @@ public class DocController {
 
             List<Element> allElements = docService.getElements(doc);
             List<Element> elements = new ArrayList<>();
-            
+
             for(Element element : allElements) {
                 if("memo".equals(element.getInputType() ) || element.getSignerNo().equals(signerNo)) {            
                     elements.add(element);

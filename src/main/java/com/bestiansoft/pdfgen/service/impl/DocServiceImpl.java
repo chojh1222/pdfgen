@@ -21,23 +21,21 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.bestiansoft.pdfgen.config.PdfGenConfig;
 import com.bestiansoft.pdfgen.domain.PdfResponse;
+import com.bestiansoft.pdfgen.mapper.BoxMapper;
+import com.bestiansoft.pdfgen.mapper.DocMapper;
+import com.bestiansoft.pdfgen.mapper.ElementMapper;
 import com.bestiansoft.pdfgen.model.Doc;
 import com.bestiansoft.pdfgen.model.DocHistory;
 import com.bestiansoft.pdfgen.model.Ebox;
 import com.bestiansoft.pdfgen.model.Element;
 import com.bestiansoft.pdfgen.model.ElementSign;
-import com.bestiansoft.pdfgen.repo.BoxRepository;
-import com.bestiansoft.pdfgen.repo.DocRepository;
-import com.bestiansoft.pdfgen.repo.ElementRepository;
-import com.bestiansoft.pdfgen.repo.ElementSignRepository;
+// import com.bestiansoft.pdfgen.repo.BoxRepository;
+// import com.bestiansoft.pdfgen.repo.DocRepository;
+// import com.bestiansoft.pdfgen.repo.ElementRepository;
+// import com.bestiansoft.pdfgen.repo.ElementSignRepository;
 import com.bestiansoft.pdfgen.service.DocService;
 import com.bestiansoft.pdfgen.util.Common;
 
-import org.apache.fontbox.encoding.StandardEncoding;
-import org.apache.fontbox.ttf.OTFParser;
-import org.apache.fontbox.ttf.OpenTypeFont;
-import org.apache.fontbox.ttf.TTFParser;
-import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSInteger;
 import org.apache.pdfbox.cos.COSName;
@@ -47,12 +45,11 @@ import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
@@ -73,7 +70,6 @@ import org.apache.xmpbox.schema.DublinCoreSchema;
 import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.apache.xmpbox.type.BadFieldValueException;
-import org.apache.xmpbox.xml.XmpSerializationException;
 import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -84,17 +80,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DocServiceImpl implements DocService {
 
-	@Autowired
-	BoxRepository boxRepository;
+	// @Autowired
+	// BoxRepository boxRepository;
 
-	@Autowired
-	DocRepository docRepository;
+	// @Autowired
+	// DocRepository docRepository;
 
-	@Autowired
-	ElementRepository elementRepository;
+	// @Autowired
+	// ElementRepository elementRepository;
 
-	@Autowired
-	ElementSignRepository elementSignRepository;
+	// @Autowired
+	// ElementSignRepository elementSignRepository;
 	
 	@Autowired
 	PdfGenConfig pdfGenConfig;
@@ -103,7 +99,16 @@ public class DocServiceImpl implements DocService {
 	Common common;
 
 	@Autowired 
-    private ResourceLoader resourceLoader;
+	private ResourceLoader resourceLoader;
+	
+	@Autowired
+	DocMapper docMapper;
+
+	@Autowired
+	ElementMapper elementMapper;
+
+	@Autowired
+	BoxMapper boxMapper;
 
 	// 문서생성 seq 번호
 	private static int seq = 0;
@@ -111,38 +116,49 @@ public class DocServiceImpl implements DocService {
 	@Override
 	public Ebox getBoxInfo(String boxId) {
 		// Ebox ebox = boxRepository.findById(boxId).orElse(null);
-		Ebox ebox = boxRepository.findByCntrctNo(boxId);		
+		// Ebox ebox = boxRepository.findByCntrctNo(boxId);		
+		Ebox ebox = boxMapper.findByCntrctNo(boxId);
 		return ebox;
 	}
 
 	@Override
 	public Doc getDoc(String docId) {
 		// Doc doc = docRepository.findById(docId).orElse(new Doc());
-		Doc doc = docRepository.findById(docId).orElse(null);
+		// Doc doc = docRepository.findById(docId).orElse(null);
+		Doc doc = docMapper.getDoc(docId);
 		return doc;
 	}
 
 	@Override
 	public PdfResponse saveDoc(Doc doc) {
-		Doc doc1 = docRepository.save(doc);
 
-		System.out.println(" doc1 :: " + doc1.getDocId());
+		// Doc doc1 = docRepository.save(doc);
+		// System.out.println(" doc1 :: " + doc1.getDocId());
+		
+		docMapper.insertDoc(doc);
+		for(Element element : doc.getElements()) {
+			elementMapper.insertElement(element);
+		}
+		
 		return new PdfResponse(200, "success");
 	}
 
 	@Override
 	public List<Element> getElements(Doc doc, String signerNo) {
-		return elementRepository.findByDocAndSignerNo(doc, signerNo);
+		// return elementRepository.findByDocAndSignerNo(doc, signerNo);
+		return elementMapper.findByDocAndSignerNo(doc, signerNo);
 	}
 
 	@Override
 	public List<Element> getElementsType(Doc doc, String inputType) {
-		return elementRepository.findByDocAndInputType(doc, inputType);
+		// return elementRepository.findByDocAndInputType(doc, inputType);
+		return elementMapper.findByDocAndInputType(doc, inputType);
 	}
 
 	@Override
 	public List<Element> getElements(Doc doc) {
-		return elementRepository.findByDoc(doc);
+		// return elementRepository.findByDoc(doc);
+		return elementMapper.findByDoc(doc);
 	}
 
 	/**
@@ -207,7 +223,8 @@ public class DocServiceImpl implements DocService {
 		// docId 로 기초가 되는 파일 조회
 		System.out.println("pdf 생성 및 객체 저장 시작 ");
 		System.out.println("docId : " + docId);
-		Doc doc = docRepository.findById(docId).orElse(null);
+		// Doc doc = docRepository.findById(docId).orElse(null);
+		Doc doc = getDoc(docId);
 
 		if (doc == null) {
 			System.out.println("객체가 없다.");
@@ -547,39 +564,52 @@ public class DocServiceImpl implements DocService {
 
 				}
 
+				element.setDoc(doc);
 
-				// 메모
+				// 새 메모
 				if(element.getEleId() == null) {
-					element.setDoc(doc);
-					elementRepository.save(element);
+					// elementRepository.save(element);
+					elementMapper.insertElement(element);
 				}
 
 				// 저장처리 
-				Integer charSize = element.getCharSize();
-				String font = element.getFont();
-				elem = elementRepository.findById(element.getEleId()).get();
+				// Integer charSize = element.getCharSize();
+				// String font = element.getFont();
+				// elem = elementRepository.findById(element.getEleId()).get();
 
 
-				System.out.println("elem == null ======================================");
-				System.out.println(elem == null);
-				System.out.println(elem.getInputType());
-				System.out.println( elem.getAddText() );
+				// System.out.println("elem == null ======================================");
+				// System.out.println(elem == null);
+				// System.out.println(elem.getInputType());
+				// System.out.println( elem.getAddText() );
 		
 				// db에서 해당 element id로 저장된 record를 찾을 수 없을 경우 종료
-				if(elem == null)
-					return null;
+				// if(elem == null)
+				// 	return null;
 
-				// 폰트 업데이트
-				elem.setCharSize(charSize);
-				elem.setFont(font);
+				// 텍스트 입력박스 폰트 업데이트
+				// elem.setCharSize(charSize);
+				// elem.setFont(font);
+				if(element.isText()) {
+					elementMapper.updateElement(element);
+				}
+
+				if(singerNo.equals(element.getSignerNo())) {
+					ElementSign elementSign = new ElementSign();
+					elementSign.setEleValue(element.getAddText());
+					elementSign.setEleSignValue(imageBytes);
+					elementSign.setElement(element);
+					elementMapper.insertElementSign(elementSign);
+				}
 
 				// 이전에 해당 element에 입력된 값이 없다면 새로입력
-				if(elem.getElementSign() == null)
-					elem.setElementSign(new ElementSign());
+				// if(elem.getElementSign() == null)
+				// 	elem.setElementSign(new ElementSign());
 
-				elem.getElementSign().setEleValue(element.getAddText());
-				elem.getElementSign().setEleSignValue(imageBytes);				
+				// elem.getElementSign().setEleValue(element.getAddText());
+				// elem.getElementSign().setEleSignValue(imageBytes);				
 				// elementSignRepository.save(elem.getElementSign());	// 값 저장처리
+				
 				contentStream.close(); // do this before saving!
 			}
 
@@ -645,7 +675,8 @@ public class DocServiceImpl implements DocService {
 			doc.setPdfPath(savePdfPath);
 			doc.setPdfRegDt(new Date());
 			
-			docRepository.save(doc);
+			// docRepository.save(doc);
+			docMapper.updateDoc(doc);
 
 			// 파일저장 및 디비정보까지 입력이 완료되면 신규파일을 기존파일로 엎어친다
 			File oriFile = new File(oriFilePath);
@@ -685,7 +716,8 @@ public class DocServiceImpl implements DocService {
 	@Override
 	public PdfResponse signComplete(String docId, String signerId){
 		
-		Doc doc = docRepository.findById(docId).orElse(null);
+		// Doc doc = docRepository.findById(docId).orElse(null);
+		Doc doc = docMapper.getDoc(docId);
 
 		if (doc == null) {
 			System.out.println("객체가 없다.");
@@ -715,7 +747,8 @@ public class DocServiceImpl implements DocService {
 			doc.setPdfName(savePdfName);
 			doc.setPdfPath(savePdfPath);
 			doc.setPdfRegDt(new Date());			
-			docRepository.save(doc);
+			// docRepository.save(doc);
+			docMapper.updateDoc(doc);
 
 
 			// 히스토리값을 저장한다.
@@ -1266,7 +1299,7 @@ public class DocServiceImpl implements DocService {
 
 	}
 
-	
-	
+
+
 	
 }

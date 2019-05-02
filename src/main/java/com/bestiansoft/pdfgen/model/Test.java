@@ -1,12 +1,12 @@
 package com.bestiansoft.pdfgen.model;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+// import javax.persistence.Entity;
+// import javax.persistence.GeneratedValue;
+// import javax.persistence.Id;
 
-@Entity
+// @Entity
 public class Test {
-    @Id @GeneratedValue
+    // @Id @GeneratedValue
     private Long id;
 
     private byte[] img;
@@ -38,4 +38,6 @@ public class Test {
     public void setId(Long id) {
         this.id = id;
     }
+
+    
 }

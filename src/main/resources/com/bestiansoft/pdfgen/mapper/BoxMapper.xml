@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bestiansoft.pdfgen.mapper.BoxMapper">
+
+    <resultMap id="eboxResultMap" type="com.bestiansoft.pdfgen.model.Ebox" >
+        <id property="docId" column="cntrct_no" />
+        <result property="reqerId" column="reqer_id" />
+        <result property="attGrpSeq" column="atchfile_grp_seq" />
+        <result property="pdfFilePath" column="pdf_path" />
+
+        <association property="users" column="cntrct_no" select="selectEboxUser" />
+    </resultMap>
+
+    <resultMap id="eboxUserResultMap" type="com.bestiansoft.pdfgen.model.EboxUser" >
+        <id property="userNo" column="partcpnt_no" />
+        <result property="userNm" column="partcpnt_nm" />
+        <result property="userSeq" column="partcpnt_seq" />
+    </resultMap>
+
+    <select id="findByCntrctNo" resultMap="eboxResultMap">
+        select
+            cntrct_no,
+            reqer_id,
+            a.atchfile_grp_seq,
+            b.pdf_path
+        from
+            ct0100m a,
+            sm0710d b
+        where
+            a.atchfile_grp_seq = b.atchfile_grp_seq
+            and cntrct_file_yn = 'Y'
+            and cntrct_no = #{cntrctNo}
+    </select>
+
+    <select id="selectEboxUser" resultMap="eboxUserResultMap">
+        select
+            cntrct_no,
+            partcpnt_no,
+            partcpnt_nm,
+            partcpnt_seq
+        from
+            ct0110d
+        where
+            cntrct_no = #{docId}
+    </select>
+</mapper>

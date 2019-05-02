@@ -3,8 +3,8 @@ package com.bestiansoft.pdfgen.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+// import javax.persistence.Id;
+// import javax.persistence.ManyToOne;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
@@ -40,7 +40,7 @@ public class Signer {
         return null;
     }
 
-    @Id
+    // @Id
     private String signerId;
     private String signerNo;
     private String signerNm;
@@ -48,7 +48,7 @@ public class Signer {
     private String email;
     
     @JsonBackReference
-    @ManyToOne
+    // @ManyToOne
     private Doc doc;
 
     /**

@@ -11,7 +11,7 @@ import java.util.List;
 
 import com.bestiansoft.pdfgen.model.Image;
 import com.bestiansoft.pdfgen.model.Test;
-import com.bestiansoft.pdfgen.repo.TestRepository;
+// import com.bestiansoft.pdfgen.repo.TestRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,8 +20,8 @@ import org.springframework.util.Base64Utils;
 @Service
 public class TestService {
 
-    @Autowired
-    TestRepository repository;
+    // @Autowired
+    // TestRepository repository;
 
     public String getTest() throws SQLException {
         try(
@@ -65,7 +65,7 @@ public class TestService {
 
         Test test = new Test();
         test.setImg(decodedByte);
-        repository.save(test);
+        // repository.save(test);
 
         System.out.println( Base64Utils.encodeToString(decodedByte) );
 
