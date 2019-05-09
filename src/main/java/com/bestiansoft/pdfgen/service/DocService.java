@@ -31,7 +31,7 @@ public interface DocService {
 
     public PdfResponse saveSignerInput(String docId, String singerNo, String userHash, List<Element> inputElements);
 
-    public PdfResponse signComplete(String docId, String signerId);
+    // public PdfResponse signComplete(String docId, String signerId);
 
     public void saveTsa();    
 

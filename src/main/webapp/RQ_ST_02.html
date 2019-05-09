@@ -46,26 +46,32 @@
 			return decodeURIComponent(results[2].replace(/\+/g, ' '));
 		}
 		function openDocumentViewer() {
-			window.docNo = '20190401000000001';
-			window.regId = 'signer1';
+			window.docNo = '201901';
+			window.regId = 'user01';
 			$( '.canvas-editor' ).load( "http://localhost:8888/document/index.html" );
 		}
 		function openContractViewer(signerNo) {
-			window.docNo = '20190401000000001';
-			window.signerNo = signerNo;
+			window.docNo = '201901';
+			window.signerNo = 'user01';
 			$( '.canvas-editor' ).load( "http://localhost:8888/contract/index.html" );
 		}
 		function openCompleteViewer() {
-			window.docNo = '20190401000000001';
-			window.signerNo = 1;
+			window.docNo = '2019001';
+			window.signerNo = 'user01';
 			$( '.canvas-editor' ).load( "http://localhost:8888/complete/index.html" );
 		}
 		function onSave() {
 			if(todo === 'document') {
-				window.documentContainer.updateDocumentInfo();	
+				window.documentContainer.updateDocumentInfo().then(function(data){
+					// 리턴값
+					alert(data.code);	// 성공 : 200
+				});
 			}
 			else if(todo === 'contract') {
-				window.contractContainer.saveContractInfo();
+				window.contractContainer.saveContractInfo('userHashValue1').then(function(data){
+					// 리턴값
+					alert(data.code);	// 성공 : 200
+				});
 			}
 			else if(todo === 'complete') {
 				window.contractContainer.saveCompleteInfo();	
@@ -118,8 +124,8 @@
 							<ul>
 								<li><a href="#">전자계약</a></li>
 								<li><a href="/RQ_ST_02.html?todo=document">생성자 페이지</a></li>
-								<li><a href="/RQ_ST_02.html?todo=contract&signerNo=1" class="on">서명자 페이지 1</a></li>
-								<li><a href="/RQ_ST_02.html?todo=contract&signerNo=2">서명자 페이지 2</a></li>
+								<li><a href="/RQ_ST_02.html?todo=contract&signerNo=user01" class="on">서명자 페이지 1</a></li>
+								<li><a href="/RQ_ST_02.html?todo=contract&signerNo=user02">서명자 페이지 2</a></li>
 								<li><a href="/RQ_ST_02.html?todo=complete">생성자 확인 페이지</a></li>
 							</ul>
 						</li>

@@ -25,21 +25,20 @@ public class Doc {
     
     private String userId;
     
-    private String docName;
-    
-    private String fileName;
+    // private String docName;    
+    // private String fileName;
 
     private String filePath;
     
     @Temporal(TemporalType.TIMESTAMP)
     private Date regDt = new Date();
 
-    private String pdfName;
-    private String pdfPath;
-    private String pdfSignId;
+    // private String pdfName;
+    // private String pdfPath;
+    // private String pdfSignId;
     
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date pdfRegDt;
+    // @Temporal(TemporalType.TIMESTAMP)
+    // private Date pdfRegDt;
 
     // @JsonManagedReference
     // @OneToMany(mappedBy = "doc", fetch = FetchType.EAGER)

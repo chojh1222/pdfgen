@@ -641,9 +641,9 @@ public class DocServiceImpl implements DocService {
 			doc.setHistory(docHistoryList);
 			
 			// pdf 저장 후 DB값 입력
-			doc.setPdfName(pdfName);
-			doc.setPdfPath(savePdfPath);
-			doc.setPdfRegDt(new Date());
+			// doc.setPdfName(pdfName);
+			// doc.setPdfPath(savePdfPath);
+			// doc.setPdfRegDt(new Date());
 			
 			docRepository.save(doc);
 
@@ -676,80 +676,6 @@ public class DocServiceImpl implements DocService {
 		return new PdfResponse(200, "저장 완료");
 	}
 
-
-	/**
-	 * 최종 계약서 저장 처리
-	 *  TSA 값 삽입 => 포탈에서 하기로 함
-	 */
-	@Transactional
-	@Override
-	public PdfResponse signComplete(String docId, String signerId){
-		
-		Doc doc = docRepository.findById(docId).orElse(null);
-
-		if (doc == null) {
-			System.out.println("객체가 없다.");
-			return new PdfResponse(404, "객체가 없다.");
-		}
-
-
-		// pdf 파일 생성 (tsa 추가?)
-		String saveRoot = pdfGenConfig.getDocHome();	// D:/ktpdf/pdfgen/src/main/resources/storage
-		String oriFilePath = doc.getPdfPath();			// 파일의 절대경로...
-		//String savePdfPath = saveRoot + File.separator + doc.getDocId()+".pdf";	// 저장 전체경로		
-		String savePdfPath = saveRoot + File.separator + doc.getDocId() + "_final.pdf";		// 저장 전체경로
-		String savePdfName = doc.getFileName();		// 별필요없을듯. 우선 파일명을 그대로 저장
-		
-		// 파일을 조회한다.
-		try{
-			PDDocument document = PDDocument.load(new File(oriFilePath));
-			Element elem;
-			
-			// TSA 삽입 시작
-			// TSA 삽입 끝
-
-			document.save(savePdfPath);
-			document.close();
-
-			// pdf 저장 후 DB값 입력
-			doc.setPdfName(savePdfName);
-			doc.setPdfPath(savePdfPath);
-			doc.setPdfRegDt(new Date());			
-			docRepository.save(doc);
-
-
-			// 히스토리값을 저장한다.
-			String pdfName = new Date()+".pdf";			
-			DocHistory docHistory = new DocHistory();			
-			docHistory.setPdfName(pdfName);
-			docHistory.setPdfPath(savePdfPath);
-			docHistory.setRegDt(new Date()); 			
-			docHistory.setSignId(signerId);
-			List<DocHistory> docHistoryList = new ArrayList<DocHistory>();
-			docHistoryList.add(docHistory);
-			doc.setHistory(docHistoryList);
-			
-		} catch (IOException e) {
-			// log.error("PDDocument load fail for fnDoc={} : {}", fnDoc, e.toString());
-			System.out.println("PDDocument load fail for fnDoc={} : {}" + e.toString());
-
-			e.printStackTrace();
-		} finally{
-
-		}
-				
-		return new PdfResponse(200, "저장 완료");
-	}
-
-	private PDType1Font getFont(String font) {
-		PDType1Font pdFont = PDType1Font.TIMES_ROMAN;
-
-		if ("Times-Roman".equals(font))
-			pdFont = PDType1Font.TIMES_ROMAN;
-		else if ("Courier-Bold".equals(font))
-			pdFont = PDType1Font.COURIER_BOLD;
-		return pdFont;
-	}
 
 	/**
 	 * 싸인 hash 값을 넣어야 함...

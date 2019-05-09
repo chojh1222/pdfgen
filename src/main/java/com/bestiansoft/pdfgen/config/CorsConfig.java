@@ -17,4 +17,43 @@ public class CorsConfig {
             }
         };
     }
+
+    // @Configuration
+    // @EnableJpaRepositories(
+    //     basePackages="com.bestiansoft.pdfgen.repo",
+    //     entityManagerFactoryRef = "entityManagerFactory",
+    //     transactionManagerRef = "transactionManager")
+    // static class DbArticleJpaRepositoriesConfig {
+    // }
+
+    
+    // // @Bean
+    // // @ConfigurationProperties(prefix = "datasource.user")
+    // // public DataSource userDataSource() {
+    // //     return DataSourceBuilder.create().build();
+    // // }
+
+    // @Bean(name = "entityManagerFactoryUser")
+    // public LocalContainerEntityManagerFactoryBean userEntityManagerFactory(
+    //     EntityManagerFactoryBuilder builder, DataSource dataSource) {
+
+    //     return builder.dataSource(dataSource)
+    //         .packages("com.bestiansoft.pdfgen.repo")
+    //         .build();
+    // }
+
+    // // @Bean(name = "transactionManagerUser")
+    // // @Primary
+    // // PlatformTransactionManager userTransactionManagerMain(
+    // //     EntityManagerFactoryBuilder builder) {
+    // // return new JpaTransactionManager(userEntityManagerFactory(builder).getObject());
+    // // }
+    
+    // @Configuration
+    // @EnableJpaRepositories(
+    //     basePackages="com.bestiansoft.pdfgen.repo",
+    //     // entityManagerFactoryRef = "entityManagerFactoryUser",
+    //     transactionManagerRef = "transactionManagerUser")
+    // static class DbUserJpaRepositoriesConfig {
+    // }
 }

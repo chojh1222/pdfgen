@@ -25,9 +25,7 @@ import com.bestiansoft.pdfgen.service.DocService;
 import com.bestiansoft.pdfgen.util.Common;
 import com.bestiansoft.pdfgen.vo.ElementsVo;
 
-import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -56,12 +54,6 @@ public class DocController {
 
     @Autowired
 	PdfGenConfig pdfGenConfig;
-
-    @Value("${server.host}")    
-    private String serverHost;
-
-    @Value("${server.port}")    
-    private String serverPort;
 
     @Autowired
     Common common;
@@ -175,6 +167,8 @@ public class DocController {
         Ebox ebox = docService.getBoxInfo(docId);
         String filePath = ebox.getPdfFilePath();
         String userNo = ebox.getReqerId();
+
+        System.out.println("userNo ::: " + userNo);
         
         // String filePath = ebox.getEBoxDoc().getPdfPath();
         // String userNo = ebox.getUserNo();        
@@ -233,6 +227,7 @@ public class DocController {
             
             // String docFilePath = doc.getPdfPath()==null ? doc.getFilePath() : doc.getPdfPath(); // 서명한 pdf를 불러오고 없으면 최초 파일을 불러와        
             String docFilePath = doc.getFilePath(); // 원본에 덮어쓰기에 원본pdf 경로를 읽어온다.
+            System.out.println("docFilePath :: " + docFilePath);
             File filePath = new File(docFilePath);
             if(!filePath.exists()){
                 ret.put("filePath", "file not exists");
@@ -269,6 +264,8 @@ public class DocController {
 
         List<Element> inputElements = elementsVo.getInputs();
         String userHash = elementsVo.getUserHash();
+        System.out.println("elementsVo.getUserHash() : " + elementsVo.getUserHash());
+
         PdfResponse pdfRes = docService.saveSignerInput(docId, signerNo, userHash, inputElements);
 
         return pdfRes;
@@ -344,8 +341,8 @@ public class DocController {
         // List<Signer> signer = doc.getSigners();
         // System.out.println("signer :: " + signer.size());        
         //String docId = "doc1";
-        PdfResponse pdfRes = docService.signComplete(docId, signerId);
-
+        // PdfResponse pdfRes = docService.signComplete(docId, signerId);
+        PdfResponse pdfRes = null;
         return pdfRes;
     }
     
