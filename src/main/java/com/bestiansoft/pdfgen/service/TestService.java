@@ -38,14 +38,26 @@ public class TestService {
     }
 
     public int uploadImage(byte[] img) throws SQLException {
+        int cnt =0;
+
+
         try(
             Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "1234");
             PreparedStatement pstmt = conn.prepareStatement("insert into ecs_sign_mgt (FILE_STORE) values (?)");
             ) {
+
+            
             pstmt.setBytes(1, img);
-            int cnt = pstmt.executeUpdate();
-            return cnt;
+            cnt = pstmt.executeUpdate();
+            
+            System.out.println("cnt :: " + cnt);
+            
+        } catch (Exception e) {
+            //TODO: handle exception
+            System.out.println("error : " + e.toString());
         }
+
+        return cnt;
     }
 
     public int uploadImage(String img) throws SQLException {
@@ -56,20 +68,47 @@ public class TestService {
             decodedByte = Base64.getDecoder().decode(encodedImg);
         }
 
-        System.out.println(img);
-        System.out.println("=============================================");
-        System.out.println("=============================================");
-        System.out.println("=============================================");
-        System.out.println("=============================================");
-        System.out.println("=============================================");
+        // System.out.println(img);
+        // System.out.println("=============================================");
+        // System.out.println("=============================================");
+        // System.out.println("=============================================");
+        // System.out.println("=============================================");
+        // System.out.println("=============================================");
 
-        Test test = new Test();
-        test.setImg(decodedByte);
-        repository.save(test);
+        int cnt =0;
 
-        System.out.println( Base64Utils.encodeToString(decodedByte) );
+        String sql = "insert into ecs_sign_mgt (sign_id, user_id, sign_type, file_name, FILE_STORE) values ("
+            +" (select COALESCE(max(sign_id)+1, 1) AS sign_id from ecs_sign_mgt),? ,? ,? ,? )";
 
-        return 1;
+        try(
+            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "1234");
+            //PreparedStatement pstmt = conn.prepareStatement("insert into ecs_sign_mgt (FILE_STORE) values (?)");
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            ) {
+
+            
+            pstmt.setString(1, "testUser"); //user_id
+            pstmt.setString(2, "sign"); // sign_type
+            pstmt.setString(3, "testFile"); // file_name
+            pstmt.setBytes(4, decodedByte); // FILE_STORE
+            cnt = pstmt.executeUpdate();
+            
+            System.out.println("cnt :: " + cnt);
+            
+        } catch (Exception e) {
+            //TODO: handle exception
+            System.out.println("error : " + e.toString());
+        }
+
+        return cnt;
+
+        // Test test = new Test();
+        // test.setImg(decodedByte);
+        // repository.save(test);
+
+        //System.out.println( Base64Utils.encodeToString(decodedByte) );
+
+        // return 1;
 
         // return uploadImage(decodedByte);
     }
@@ -79,13 +118,17 @@ public class TestService {
             Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "1234");
             PreparedStatement pstmt = conn.prepareStatement("delete from ecs_sign_mgt where sign_id = ?");
             ) {
-            pstmt.setString(1, imgId);
+            // pstmt.setString(1, imgId);
+            pstmt.setInt(1, Integer.parseInt(imgId));
             int cnt = pstmt.executeUpdate();
             return cnt;
         }
     }
 
     public List<Image> getImages() throws SQLException {
+
+        System.out.println("TestService start !!");
+
         try(
             Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "1234");
             PreparedStatement pstmt = conn.prepareStatement("select SIGN_ID, FILE_STORE from ecs_sign_mgt");
@@ -95,7 +138,8 @@ public class TestService {
             while(rs.next()) {
                 int imageId = rs.getInt(1);
                 String enc = Base64Utils.encodeToString(rs.getBytes(2));
-                // ret.add(new Image(imageId, "", "", "", enc));
+                
+                ret.add(new Image(imageId, "", "", "", enc));
             }
             return ret;
         } 

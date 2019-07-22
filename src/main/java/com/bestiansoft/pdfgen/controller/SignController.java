@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.bestiansoft.pdfgen.model.Image;
-import com.bestiansoft.pdfgen.service.TestService;
+import com.bestiansoft.pdfgen.service.SignService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -20,7 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class SignController {
 
     @Autowired
-    TestService testService;
+    // TestService testService;
+    SignService signService;
 
     @RequestMapping(value = "/test", method = { RequestMethod.POST })
     public String req(@RequestBody Image image) throws SQLException {
@@ -34,20 +35,23 @@ public class SignController {
 
     @RequestMapping(value = "/upload", method = { RequestMethod.POST })
     public String upload(MultipartFile file) throws SQLException, IOException {
-        int res = testService.uploadImage(file.getBytes());
+        int res = signService.uploadImage(file.getBytes());
         return String.valueOf(res);
     }
     
     @RequestMapping(value = "/images", method = { RequestMethod.GET })
     public List<Image> getImages() throws SQLException, IOException {
-        List<Image> res = testService.getImages();
+        System.out.println("images start ");
+        List<Image> res = signService.getImages();
+
+        System.out.println("res : " + res.size());
         return res;
     }
 
     @RequestMapping(value = "/uploadsign", method = { RequestMethod.POST })
     public String uploadsign(String data) throws SQLException, IOException {
-        System.out.println("upload sign!");
-        testService.uploadImage(data);
+        System.out.println("upload sign!");        
+        signService.uploadImage(data);
         return "done";
     }
 
@@ -57,7 +61,7 @@ public class SignController {
         System.out.println("===========================================");
         System.out.println("del sign!!!!");
         System.out.println("imgId = " + imgId);
-        testService.deleteImage(imgId);
+        signService.deleteImage(imgId);
         return "done";
     }
 }

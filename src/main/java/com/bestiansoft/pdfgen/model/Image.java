@@ -10,13 +10,14 @@ public class Image {
     String encImg;
     List<String> arr;
 
-    public Image(int signId, String userId, String signtype, String filename, String encImg, List<String> arr) {
+    // public Image(int signId, String userId, String signtype, String filename, String encImg, List<String> arr) {
+    public Image(int signId, String userId, String signtype, String filename, String encImg) {
         this.signId = signId;
         this.userId = userId;
         this.signtype = signtype;
         this.filename = filename;
         this.encImg = encImg;
-        this.arr = arr;
+        // this.arr = arr;
     }
 
     /**
